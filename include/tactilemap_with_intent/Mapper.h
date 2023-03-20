@@ -14,6 +14,7 @@
 const std::vector<std::string> basicLayers = {"static", "dynamic"};
 
 #define SCRN_DEFAULT_RATE 5
+#define SCRN_ASPECT_RATIO 1.5
 
 class Mapper {
 public:
@@ -23,23 +24,22 @@ public:
     void setZoom(double zoom);
     void updateSubMap();
     void publishMap();
+    cv_bridge::CvImage getMapImg();
 
 private:
     ros::NodeHandle nodeHandle_;
     ros::Subscriber map_sub_;
     ros::Publisher localmap_occupancy_pub_;
     ros::Publisher localmap_img_pub_;
-
     tf::TransformListener odom_listener_;
 
     grid_map::GridMap globalmap_;
     grid_map::GridMap localmap_;
 
-    std::string* layer = new std::string("layer");
-
     ros::Timer mapUpdateTimer_;
+    ros::Timer zoomUpdateTimer_;
 
-    double zoom_;
+    double targetZoom_, currentZoom_;
 };
 
 #endif //SRC_MAPPER_H

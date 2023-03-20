@@ -4,11 +4,12 @@
     <arg name="screen_rate_hz"  default="20" />
     <arg name="use_rviz"        default="true" />
     <arg name="rviz_cfg"        default="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
-
+    <arg name="zoom_level"      default="5" />
 
     <node name="tactilemap_with_intent" pkg="tactilemap_with_intent" type="tmwi_node" output="screen">
-        param name="gridmaptopic" value="$(arg gridmap_topic)" />
-        param name="screenrate" value="$(arg screen_rate_hz)" />
+        param name="gridmap_opic" value="$(arg gridmap_topic)" />
+        param name="screen_rate" value="$(arg screen_rate_hz)" />
+        param name="zoom_level" value="$(arg zoom_level)" />
     </node>
 
     <!-- Visualization RVIZ -->

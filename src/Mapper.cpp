@@ -38,20 +38,36 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_m
     /*
      * Set timed screen & publish refresh
      */
-    double rate = SCRN_DEFAULT_RATE;
+    double scrnRate = SCRN_DEFAULT_RATE;
     if (!nodeHandle.getParam("/screen_rate_hz", rate)) {
         ROS_INFO("No parameter for screen rate; has node started? -- using default value");
     }
     ROS_INFO("Running at %f hz", rate);
-    // Update submap for screen at 20 hz
-    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / rate), std::bind(&Mapper::updateSubMap, this));
+    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / scrnRate), std::bind(&Mapper::updateSubMap, this));
+
+    /*
+     * Set timed zoom level update from parameter server
+     */
+    double zoomRate = 5;
+    updateZoom();
+    currentZoom_ = targetZoom_;
+    zoomUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / zoomRate), std::bind(&Mapper::updateZoom, this));
 }
 
 Mapper::~Mapper() {}
 
-void Mapper::setZoom(double zoom) {
-    this->zoom_ = zoom;
+
+void Mapper::setZoom(double targetZoom) {
+    this->targetZoom_ = targetZoom;
 }
+
+
+cv_bridge::CvImage Mapper::getMapImg(){
+    localmap_image_out;
+    grid_map::GridMapRosConverter::toCvImage(localmap_, "static", sensor_msgs::image_encodings::MONO8, localmap_image_out);
+    return localmap_image_out;
+}
+
 
 void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
     std_msgs::Header header = msg->header;
@@ -63,23 +79,24 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
     } else ROS_INFO("Empty map");
 }
 
+
 void Mapper::updateSubMap() {
+    if(currentZoomLevel_ != targetZoomLevel_){
+        // Temporary, add easing here
+        currentZoomLevel_ != targetZoomLevel_;
+    }
+
     tf::StampedTransform inputtransform;
-//    tf::StampedTransform 2d_transform;
     Eigen::Isometry3d eigentransform;
     grid_map::Position position(0,0);
-    grid_map::Length length(5.0, 5.0);
+    grid_map::Length length(currentZoomLevel_, currentZoomLevel_*SCRN_ASPECT_RATIO);
     bool success;
 
     try {
         odom_listener_.lookupTransform("/camera_link", "/map", ros::Time(0), inputtransform);
-//        tf::Quaternion rotation = inputtransform.getRotation();
-//        tf::Vector3 position = inputtransform.getOrigin();
-//        2d_transform.stamp = inputtransform.stamp;
-//        2d_transform.setRotation(tf::Quaternion(-rotation.y, 0, 0, rotation.w));
-//        2d_transform.setOrigin(position(0), position(1), position(2));
-
         tf::transformTFToEigen(inputtransform,eigentransform);
+
+        //TODO map transformation only in XZ-plane: no vertical movement & limit rotation about the y-axis
         localmap_ = globalmap_.getTransformedMap(eigentransform, "static", "camera_link").getSubmap(position, length, success); //temporary
         publishMap();
         ROS_INFO("Successfully transformed map");
@@ -88,9 +105,8 @@ void Mapper::updateSubMap() {
         ROS_ERROR("%s", ex.what());
         ros::Duration(1.0).sleep();
     }
-
-//    publishMap();
 };
+
 
 void Mapper::publishMap() {
 //     Publish transformed gridmap
@@ -104,4 +120,11 @@ void Mapper::publishMap() {
         localmap_img_pub_.publish(localmap_image_out);
     } else ROS_INFO("Cannot publish tf map because it's still empty");
 
+}
+
+
+void updateZoom(){
+    if (! nodeHandle_.getParam("zoom_level", targetZoom_)){
+        ROS_INFO("Could not find parameter zoom_level; is it up?");
+    }
 }
