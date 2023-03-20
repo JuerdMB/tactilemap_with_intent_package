@@ -1,0 +1,17 @@
+<launch>
+
+    <arg name="gridmap_topic"   default="/rtabmap/grid_map" />
+    <arg name="screen_rate_hz"  default="20" />
+    <arg name="use_rviz"        default="true" />
+    <arg name="rviz_cfg"        default="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
+
+
+    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent" type="tmwi_node" output="screen">
+        param name="gridmaptopic" value="$(arg gridmap_topic)" />
+        param name="screenrate" value="$(arg screen_rate_hz)" />
+    </node>
+
+    <!-- Visualization RVIZ -->
+    <node if="$(arg use_rviz)" pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_cfg)"/>
+
+</launch>
