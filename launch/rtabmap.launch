@@ -11,6 +11,7 @@
         <arg name="camera_info_topic"  value="/camera/color/camera_info"/>
         <arg name="rviz"               value="true"/>
         <arg name="rtabmapviz"         value="false"/>
+        <arg name="gen_cloud_voxel"    value="0.15"/>
     </include>
 
 

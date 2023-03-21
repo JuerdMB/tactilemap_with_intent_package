@@ -8,16 +8,19 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
-class MapOverlay(){
+class MapOverlay {
 public:
-    MapOverlay(Eigen::Vector2d& screen_size);
+    MapOverlay();
+
     ~MapOverlay();
-    push(int location, int direction, int intensity);
-    pinch(int location, int direction, int intensity);
-    wave(int location, int direction, int intensity);
 
-private:
+    void push(int location, int direction, int intensity);
 
-}
+    void pinch(int location, int direction, int intensity);
+
+    void wave(int location, int direction, int intensity);
+
+
+};
 
 #endif //TACTILEMAP_WITH_INTENT_MAPOVERLAY_H

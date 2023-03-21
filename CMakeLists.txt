@@ -222,5 +222,5 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp src/MapOverlay.cpp)
+add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
