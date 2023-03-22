@@ -44,7 +44,7 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_m
     {
         ROS_INFO("No parameter for screen rate; has node started? -- using default value");
     }
-    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / scrnRate), std::bind(&Mapper::updateSubMap, this));
+    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / scrnRate), std::bind(&Mapper::updateTransformedMap, this));
 
     // Rate for zoom level update from parameter server
     double zoomRate = 5.;
@@ -106,7 +106,7 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
     // Check if the map has valid width & height
     if (info.width || info.height)
     {
-        GridMapRosConverter::fromOccupancyGrid(*msg, "static", globalmap_);
+        GridMapRosConverter::fromOccupancyGrid(*msg, STATICLAYER, globalmap_);
         ROS_INFO("Got map from map server: %dx%d", info.width, info.height);
     }
     else
@@ -116,7 +116,7 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
 /*
  * This method runs everytime the screen is updated
  */
-void Mapper::updateSubMap()
+void Mapper::updateTransformedMap()
 {
 
     // Update the zoom level of the map
@@ -145,7 +145,7 @@ void Mapper::updateSubMap()
         pitch = 0;
 
         // Transform euler angles back into quaternion and create xz-transform
-        tf::Quaternion xz_quat(yaw, pitch, roll);
+        tf::Quaternion xz_quat(roll, pitch, yaw);
         tf::Transform xz_transform(xz_quat, inputtransform.getOrigin());
 
         // Turn tf transform into isometry3D for map translation
@@ -158,6 +158,9 @@ void Mapper::updateSubMap()
         // Transform map with isometry
         transformedmap_ = globalmap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link")
                               .getSubmap(position, length, success);
+        
+        if(success) ROS_INFO("Successfully transformed map to %f x %f", 
+                                    transformedmap_.getLength().x(), transformedmap_.getLength().y());
 
         // Publish map to map topic
         publishMap();

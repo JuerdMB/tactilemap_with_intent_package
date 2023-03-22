@@ -9,7 +9,7 @@
         <arg name="frame_id"           value="/camera_link"/>
         <arg name="rgb_topic"          value="/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/camera/color/camera_info"/>
-        <arg name="rviz"               value="true"/>
+        <arg name="rviz"               value="false"/>
         <arg name="rtabmapviz"         value="false"/>
         <arg name="gen_cloud_voxel"    value="0.15"/>
     </include>

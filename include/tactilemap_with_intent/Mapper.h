@@ -25,7 +25,7 @@ public:
     void setZoom(double zoom);
 
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
-    void updateSubMap();
+    void updateTransformedMap();
     void publishMap();
 
     grid_map::GridMap getTransformedGridMap();
