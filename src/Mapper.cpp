@@ -9,6 +9,7 @@
 #include <std_msgs/Float64.h>
 #include <tf_conversions/tf_eigen.h>
 #include <tf/transform_datatypes.h>
+#include <cmath>
 
 using namespace grid_map;
 
@@ -118,12 +119,15 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
  */
 void Mapper::updateTransformedMap()
 {
-
+    
+    double zoomError = targetZoom_ - currentZoom_;
     // Update the zoom level of the map
-    if (currentZoom_ != targetZoom_)
+    if (zoomError != 0)
     {
-        // Temporary, add easing here
-        currentZoom_ = targetZoom_;
+        if((abs)zoomError < ZOOMERROR_THRESHOLD) currentZoom_ = targetZoom_;
+        else {
+            currentZoom_ = DAMPING_FACTOR*currentZoom_ + (1-DAMPING_FACTOR)*targetZoom;
+        }
     }
 
     // Get the current robot pose

@@ -18,6 +18,10 @@ const std::vector<std::string> basicLayers = {STATICLAYER};
 #define SCRN_DEFAULT_RATE 5
 #define SCRN_ASPECT_RATIO 1.5
 
+// Zoom easing
+#define ZOOMERROR_THRESHOLD .1
+#define DAMPING FACTOR .6
+
 class Mapper {
 public:
     Mapper(ros::NodeHandle nh, grid_map::GridMap &global_map, grid_map::GridMap &localmap);
