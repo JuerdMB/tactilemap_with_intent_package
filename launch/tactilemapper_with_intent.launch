@@ -4,7 +4,7 @@
     <arg name="screen_rate_hz"  default="20" />
     <arg name="use_rviz"        default="true" />
     <arg name="rviz_cfg"        default="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
-    <arg name="zoom_level"      default="10" />
+    <arg name="zoom_level"      default="5" />
 
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="align_depth"                   value="true"/>
@@ -16,7 +16,8 @@
         <arg name="frame_id"           value="/camera_link"/>
         <arg name="rgb_topic"          value="/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/camera/color/camera_info"/>
-        <arg name="rviz"               value="false"/>
+        <arg name="rviz"               value="true"/>
+        <arg name="rviz_cfg"           value="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
         <arg name="rtabmapviz"         value="false"/>
         <arg name="gen_cloud_voxel"    value="0.15"/>
     </include>
@@ -26,8 +27,5 @@
         <param name="screen_rate" value="$(arg screen_rate_hz)" />
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>
-
-    <!-- Visualization RVIZ -->
-    <node if="$(arg use_rviz)" pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_cfg)"/>
 
 </launch>

@@ -1,0 +1,43 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/juerd/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_core/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_costmap_2d/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_cv/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_demos/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_filters/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_loader/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_octomap/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_pcl/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_ros/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_rviz_plugin/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_sdf/include/**",
+        "/home/juerd/catkin_ws/src/grid_map/grid_map_visualization/include/**",
+        "/home/juerd/catkin_ws/src/realsense-ros/realsense2_camera/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_conversions/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_costmap_plugins/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_odom/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_rviz_plugins/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_slam/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_sync/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_util/include/**",
+        "/home/juerd/catkin_ws/src/rtabmap_ros/rtabmap_viz/include/**",
+        "/home/juerd/catkin_ws/src/tactilemap_with_intent/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

@@ -73,7 +73,7 @@ nav_msgs::OccupancyGrid Mapper::getTransformedOccupancy()
 cv_bridge::CvImage Mapper::getTransformedMapImg()
 {
     cv_bridge::CvImage image_out;
-    grid_map::GridMapRosConverter::toCvImage(transformedmap_, STATICLAYER, sensor_msgs::image_encodings::RGB(A)8,
+    grid_map::GridMapRosConverter::toCvImage(transformedmap_, STATICLAYER, sensor_msgs::image_encodings::RGB8,
         image_out);
     return image_out;
 }
