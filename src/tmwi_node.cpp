@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <tactilemap_with_intent/Mapper.h>
+#include <tactilemap_with_intent_package/Mapper.h>
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "Tactilemap_with_intent");

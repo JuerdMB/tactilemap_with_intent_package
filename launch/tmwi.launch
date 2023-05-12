@@ -1,9 +1,9 @@
 <launch>
 
     <arg name="gridmap_topic"   default="/rtabmap/grid_map" />
-    <arg name="screen_rate_hz"  default="20" />
+    <arg name="screen_rate_hz"  default="15" />
     <arg name="use_rviz"        default="true" />
-    <arg name="rviz_cfg"        default="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
+    <arg name="rviz_cfg"        default="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
     <arg name="zoom_level"      default="5" />
 
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
@@ -17,13 +17,14 @@
         <arg name="rgb_topic"          value="/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/camera/color/camera_info"/>
         <arg name="rviz"               value="true"/>
-        <arg name="rviz_cfg"           value="$(find tactilemap_with_intent)/launch/config/rgbd.rviz" />
+        <arg name="rviz_cfg"           value="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
         <arg name="rtabmapviz"         value="false"/>
         <arg name="gen_cloud_voxel"    value="0.15"/>
+        <!-- <arg name="odom_max_rate"      value ="$(arg screen_rate_hz)"/> -->
     </include>
 
-    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent" type="tmwi_node" output="screen">
-        <param name="gridmap_opic" value="$(arg gridmap_topic)" />
+    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="tmwi_node" output="screen">
+        <param name="gridmap_topic" value="$(arg gridmap_topic)" />
         <param name="screen_rate" value="$(arg screen_rate_hz)" />
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>

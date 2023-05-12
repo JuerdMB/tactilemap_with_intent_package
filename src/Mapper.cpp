@@ -41,7 +41,7 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_m
     } else {
         ROS_INFO("No parameter for screen rate; has node started? -- using default value");
     }
-    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / scrnRate), std::bind(&Mapper::updateSubMap, this));
+    mapUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / scrnRate), std::bind(&Mapper::publishMap, this));
 
     // Rate for zoom level update from parameter server
     double zoomRate = 5.;
@@ -80,13 +80,14 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
     if (info.width || info.height) {
         GridMapRosConverter::fromOccupancyGrid(*msg, "static", globalmap_);
         ROS_INFO("Got map from map server: %dx%d", info.width, info.height);
+        updateTransformedMap();
     } else ROS_INFO("Got an empty map from topic %s", this->map_sub_topic_);
 }
 
 /*
  * This method runs everytime the screen is updated
  */
-void Mapper::updateSubMap() {
+void Mapper::updateTransformedMap() {
 
     // Update the zoom level of the map
     if (currentZoom_ != targetZoom_) {
@@ -141,9 +142,9 @@ void Mapper::publishMap() {
 //     Publish transformed gridmap
     if (transformedmap_.getLength().x() && transformedmap_.getLength().y()) {
         nav_msgs::OccupancyGrid transformedmap_occupancy_outmsg;
-        GridMapRosConverter::toOccupancyGrid(transformedmap_, basicLayers, 0., 1., transformedmap_occupancy_outmsg);
+        GridMapRosConverter::toOccupancyGrid(transformedmap_, basicLayers[0], 0., 1., transformedmap_occupancy_outmsg);
         transformedmap_occupancy_pub_.publish(transformedmap_occupancy_outmsg);
-
+        ROS_INFO("publish");
         cv_bridge::CvImage transformedmap_image_out;
         grid_map::GridMapRosConverter::toCvImage(transformedmap_, STATICLAYER, sensor_msgs::image_encodings::MONO8,
                                                  transformedmap_image_out);
