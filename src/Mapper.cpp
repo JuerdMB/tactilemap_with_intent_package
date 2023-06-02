@@ -17,7 +17,6 @@ using namespace grid_map;
  */
 Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_map::GridMap &localmap) :
         nodeHandle_(nodeHandle) {
-
     ROS_INFO("Mapper Started");
 
     // Subscribers & Publishers
@@ -66,8 +65,17 @@ void Mapper::setZoom(double targetZoom) {
  * Get zoom from parameter server.
  */
 void Mapper::updateZoom() {
+    // Try to update zoomlevel
     if (!nodeHandle_.getParam("zoom_level", targetZoom_)) {
         ROS_INFO("Could not find parameter zoom_level; is it up?");
+        targetZoom_ = ZOOM_DEFAULT;
+        currentZoom_ = ZOOM_DEFAULT;
+    } 
+
+    // Update the zoom level of the map
+    if ( abs(currentZoom_-targetZoom_)>ZOOMERROR_THRESHOLD ) {
+        // Temporary, add easing here
+        currentZoom_ = targetZoom_;
     }
 }
 
@@ -88,12 +96,8 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
  * This method runs everytime the screen is updated
  */
 void Mapper::updateTransformedMap() {
-
-    // Update the zoom level of the map
-    if (currentZoom_ != targetZoom_) {
-        // Temporary, add easing here
-        currentZoom_ = targetZoom_;
-    }
+    // Update and ease the zoom level on the map
+    updateZoom();
 
     // Get the current robot pose
     tf::StampedTransform inputtransform;
@@ -104,29 +108,26 @@ void Mapper::updateTransformedMap() {
     bool success;
 
     try {
-        odom_listener_.lookupTransform("/camera_link", "/map", ros::Time(0), inputtransform);
+    //     odom_listener_.lookupTransform("/camera_link", "/map", ros::Time(0), inputtransform);
 
-        // Transform inputtransform rotation to euler angles
-        tfScalar roll, pitch, yaw;
-        inputtransform.getBasis().getRPY(roll, pitch, yaw);
-        roll = 0; pitch = 0;
+    //     // Transform inputtransform rotation to euler angles
+    //     tfScalar roll, pitch, yaw;
+    //     inputtransform.getBasis().getRPY(roll, pitch, yaw);
+    //     roll = 0; pitch = 0;
 
-        // Transform euler angles back into quaternion and create xz-transform
-        tf::Quaternion xz_quat(yaw, pitch, roll);
-        tf::Transform xz_transform(xz_quat, inputtransform.getOrigin());
+    //     // Transform euler angles back into quaternion and create xz-transform
+    //     tf::Quaternion xz_quat(yaw, pitch, roll);
+    //     tf::Transform xz_transform(xz_quat, inputtransform.getOrigin());
 
-        // Turn tf transform into isometry3D for map translation
-        Eigen::Isometry3d isometryTransform;
-        tf::transformTFToEigen(xz_transform, isometryTransform);
+    //     // Turn tf transform into isometry3D for map translation
+    //     Eigen::Isometry3d isometryTransform;
+    //     tf::transformTFToEigen(xz_transform, isometryTransform);
 
-        //TODO Low pass filter op de transform zetten
-        //TODO eerst submap, dan transform, dan weer submap
+    //     // Transform map with isometry
+    //     transformedmap_ = globalmap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link")
+    //             .getSubmap(position, length, success);
 
-        // Transform map with isometry
-        transformedmap_ = globalmap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link")
-                .getSubmap(position, length, success);
-
-        // Publish map to map topic
+    //     // Publish map to map topic
         publishMap();
     }
     catch (tf::TransformException ex) {
@@ -139,16 +140,25 @@ void Mapper::updateTransformedMap() {
  * Publish the transformed zoomed submap
  */
 void Mapper::publishMap() {
+    
 //     Publish transformed gridmap
     if (transformedmap_.getLength().x() && transformedmap_.getLength().y()) {
+        ROS_INFO("Publishing maps of .. x ..");
+
+        // Publish a new occupancy grid message to server
         nav_msgs::OccupancyGrid transformedmap_occupancy_outmsg;
         GridMapRosConverter::toOccupancyGrid(transformedmap_, basicLayers[0], 0., 1., transformedmap_occupancy_outmsg);
         transformedmap_occupancy_pub_.publish(transformedmap_occupancy_outmsg);
-        ROS_INFO("publish");
+
+        // Transform a CVImage of the map to the server
         cv_bridge::CvImage transformedmap_image_out;
         grid_map::GridMapRosConverter::toCvImage(transformedmap_, STATICLAYER, sensor_msgs::image_encodings::MONO8,
                                                  transformedmap_image_out);
         transformedmap_img_pub_.publish(transformedmap_image_out);
-    } else ROS_INFO("Cannot publish tf map because it's still empty");
+
+    } else{
+        ROS_INFO("Cannot publish tf map because it's still empty");
+        ros::Duration(1.0).sleep();
+    } 
 
 }

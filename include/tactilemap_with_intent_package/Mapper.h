@@ -19,8 +19,9 @@ const std::vector<std::string> basicLayers = {STATICLAYER};
 #define SCRN_ASPECT_RATIO 1.5
 
 // Zoom easing
-#define ZOOMERROR_THRESHOLD .1
-#define DAMPING FACTOR .6
+const double ZOOM_DEFAULT = 10.;
+const double ZOOMERROR_THRESHOLD = .05;
+const double DAMPING_FACTOR = .6;
 
 class Mapper {
 public:
