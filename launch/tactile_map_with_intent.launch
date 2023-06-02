@@ -1,17 +1,29 @@
 <launch>
 
+    <!-- PARAMETERS -->
+    <!-- General settings -->
+    <arg name ="2D_Mapping"     default="false" />  
+
+    <!-- Topics for inter-node comms -->
     <arg name="gridmap_topic"   default="/rtabmap/grid_map" />
+
+        <!-- Default values  -->
     <arg name="screen_rate_hz"  default="15" />
+    <arg name="zoom_level"      default="3" />
+
+        <!-- Visualisation -->
     <arg name="use_rviz"        default="true" />
     <arg name="rviz_cfg"        default="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
-    <arg name="zoom_level"      default="5" />
 
+
+    <!-- REALSENSE -->
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="align_depth"                   value="true"/>
     </include>
 
+    <!-- RTABMAP -->
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
-        <arg name="rtabmap_args"       value="--delete_db_on_start"/>
+        <arg name="rtabmap_args"       value=""/> <!--"delete_db_on_start"-->
         <arg name="depth_topic"        value="/camera/aligned_depth_to_color/image_raw"/>
         <arg name="frame_id"           value="/camera_link"/>
         <arg name="rgb_topic"          value="/camera/color/image_raw"/>
@@ -23,10 +35,17 @@
         <!-- <arg name="odom_max_rate"      value ="$(arg screen_rate_hz)"/> -->
     </include>
 
+
+    <!-- TACTILE MAP WITH INTENT -->
     <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="tmwi_node" output="screen">
         <param name="gridmap_topic" value="$(arg gridmap_topic)" />
         <param name="screen_rate" value="$(arg screen_rate_hz)" />
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>
 
+
+    <!-- LOGGING -->
+    <node pkg="rosservice" type="rosservice" name="set_rtabmap_log_level" args="call --wait /rtabmap/rtabmap/set_logger_level 'ros.rtabmap' 'Error'" />
+    <node pkg="rosservice" type="rosservice" name="set_odom_log_level" args="call --wait /rtabmap/rgbd_odometry/set_logger_level 'ros.rtabmap_odom' 'Error'" />
+    
 </launch>
