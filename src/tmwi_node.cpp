@@ -7,11 +7,13 @@ int main(int argc, char **argv) {
     ros::NodeHandle nodeHandle("~");
 
     // Create Mapper that will take care of creating custom, transformed, zoomed maps
-    grid_map::GridMap globalmap(basicLayers);
-    grid_map::GridMap transformedmap(basicLayers);
+    grid_map::GridMap fullMap(basicLayers);
+    grid_map::GridMap transformedMap(basicLayers);
+    Mapper mapper(nodeHandle, fullMap, transformedMap);
 
-    Mapper mapper(nodeHandle, globalmap, transformedmap);
+    // The mapper will start listening for maps from ROS
 
+    // Every x seconds, try to send the map to the screen
     ros::Timer mapdata_transfer_timer = nodeHandle.createTimer(ros::Duration(3.), std::bind(&Mapper::send_map_to_screen, &mapper));
 
     while(ros::ok()){

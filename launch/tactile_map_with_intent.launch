@@ -44,6 +44,10 @@
     </node>
 
 
+    <!-- SOCKET NODE -->
+    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="socket_node" output="screen">
+    </node>
+
     <!-- LOGGING -->
     <node pkg="rosservice" type="rosservice" name="set_rtabmap_log_level" args="call --wait /rtabmap/rtabmap/set_logger_level 'ros.rtabmap' 'Error'" />
     <node pkg="rosservice" type="rosservice" name="set_odom_log_level" args="call --wait /rtabmap/rgbd_odometry/set_logger_level 'ros.rtabmap_odom' 'Error'" />

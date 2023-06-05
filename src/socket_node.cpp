@@ -14,17 +14,19 @@
 
 #define DEFAULT_PORT 55555
 #define DEFAULT_BUFLEN 512
-
 #define LOOPBACK "127.0.0.0"
-
 const char HOST_IP[] = "192.168.2.10";
-bool CONNECTED = false;
 
+bool CONNECTED = false;
 int sockfd, n;
 char buffer[DEFAULT_BUFLEN];
 
+const std::string map_topic = "/tactilemap_with_intent/transformedmap_occupancy";
+
 void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
 {
+    ROS_INFO("Received a map... ");
+    // First check if we are connected, if not, cannot do anything
     if (CONNECTED)
     {
         nav_msgs::MapMetaData info = message->info;
@@ -78,7 +80,7 @@ void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
 
     else
     {
-        ROS_INFO("ScreenDataTransmitter got map but not connected");
+        ROS_INFO("But socket is not connected");
     }
 }
 
@@ -88,7 +90,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "screen_controller");
     ros::NodeHandle nodeHandle("~");
 
-    ros::Subscriber mapSubscriber = nodeHandle.subscribe("/tactilemap_with_intent/transformedmap_occupancy", 1, attemptSendMap);
+    ros::Subscriber mapSubscriber = nodeHandle.subscribe(map_topic, 1, attemptSendMap);
 
     int portno;
 

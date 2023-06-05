@@ -1,5 +1,13 @@
 {
     "files.associations": {
         "tmwi_input_node": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/juerd/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/juerd/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
 }

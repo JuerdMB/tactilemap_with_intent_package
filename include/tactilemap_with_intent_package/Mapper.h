@@ -6,6 +6,7 @@
 
 #include <string>
 #include <ros/ros.h>
+
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float32.h>
 #include <tf/transform_listener.h>
@@ -30,9 +31,11 @@ class Mapper {
 public:
     Mapper(ros::NodeHandle nh, grid_map::GridMap &global_map, grid_map::GridMap &localmap);
     ~Mapper();
+
+
     void setZoom(double zoom);
 
-    
+
 
     grid_map::GridMap getTransformedGridMap();
     cv_bridge::CvImage getTransformedMapImg();
@@ -41,25 +44,38 @@ public:
     void publish_map_image();
     void send_map_to_screen();
 
+
+
 private:
+    // Basic ROS requirements
     ros::NodeHandle nodeHandle_;
+
+    // Getting the map from RTABMAP server
     std::string map_sub_topic_;
     ros::Subscriber map_sub_;
+    void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);     // Incoming map from RTABMAP callback
+    grid_map::GridMap fullMap_;                                         // This is the total map, centered around the user
+    bool receivedMap;  
+    void transformFullMapToMe();                                                 // Monitor if first map has been received
+
+    // Zoom level
     ros::Subscriber map_zoom_sub_;
-    ros::Publisher transformedmap_occupancy_pub_;
-    ros::Publisher transformedmap_img_pub_;
-    tf::TransformListener odom_listener_;
-
-    bool receivedMap; // Monitor if first map has been received
-    grid_map::GridMap globalmap_;
-    grid_map::GridMap transformedmap_;
-
-    void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg); // Map callback
     void incomingZoom(const std_msgs::Float32& msg);
-    void updateTransformedMap();
 
-    ros::Timer mapUpdateTimer_;
-    ros::Timer zoomUpdateTimer_;
+    // Transforming the map to the right zoom & location
+    grid_map::GridMap transformedMap_;                                  // The map corrected to the right zoom level & position
+
+    // Resizing the map for display on the dotpad
+    nav_msgs::OccupancyGrid output_gridmap;
+    nav_msgs::OccupancyGrid scale_transformedMap_to_screen();
+
+    // Sending out the maps
+    ros::Publisher transformedMap_occupancy_pub_;
+    ros::Publisher transformedMap_img_pub_;
+    tf::TransformListener odom_listener_;    
+
+    // ros::Timer mapUpdateTimer_;
+    // ros::Timer zoomUpdateTimer_;
 
     void updateZoom();
     float targetZoom_, currentZoom_;
