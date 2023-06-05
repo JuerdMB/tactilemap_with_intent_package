@@ -10,12 +10,11 @@ using namespace grid_map;
 
 Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_map::GridMap &localmap) : nodeHandle_(nodeHandle)
 {
-    ROS_INFO("Mapper Started");
-
-    // Subscribers & Publishers
+    // Initial ROS stuff
     this->nodeHandle_ = nodeHandle;
+
     map_sub_ = nodeHandle_.subscribe("/rtabmap/grid_map", 1, &Mapper::incomingMap, this);
-    map_zoom_sub_ = nodeHandle_.subscribe(MAP_ZOOM_TOPIC, 1, &Mapper::incomingZoom, this);
+    zoom_sub_ = nodeHandle_.subscribe(MAP_ZOOM_TOPIC, 1, &Mapper::incomingZoom, this);
     transformedMap_occupancy_pub_ = nodeHandle_.advertise<nav_msgs::OccupancyGrid>("transformedMap_occupancy", 1);
     transformedMap_img_pub_ = nodeHandle_.advertise<cv_bridge::CvImage>("transformedMap_img", 1);
 

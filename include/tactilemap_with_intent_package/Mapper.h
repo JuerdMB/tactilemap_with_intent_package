@@ -1,7 +1,3 @@
-//
-// Created by juerd on 16-3-23.
-//
-
 #pragma once
 
 #include <string>
@@ -13,12 +9,14 @@
 #include <grid_map_msgs/GridMap.h>
 #include <grid_map_ros/grid_map_ros.hpp>
 
+
 // Layers for map, currently only 1 layer
 const std::string STATICLAYER = "static";
 const std::vector<std::string> basicLayers = {STATICLAYER};
 
 #define SCRN_DEFAULT_RATE 5
 #define SCRN_ASPECT_RATIO 1.5
+
 
 // Zoom easing
 const double ZOOM_DEFAULT = 10.;
@@ -27,15 +25,13 @@ const double DAMPING_FACTOR = .6;
 
 const std::string MAP_ZOOM_TOPIC = "/controller/map_zoom_level";
 
+
 class Mapper {
 public:
     Mapper(ros::NodeHandle nh, grid_map::GridMap &global_map, grid_map::GridMap &localmap);
     ~Mapper();
 
-
     void setZoom(double zoom);
-
-
 
     grid_map::GridMap getTransformedGridMap();
     cv_bridge::CvImage getTransformedMapImg();
@@ -59,7 +55,7 @@ private:
     void transformFullMapToMe();                                                 // Monitor if first map has been received
 
     // Zoom level
-    ros::Subscriber map_zoom_sub_;
+    ros::Subscriber zoom_sub_;
     void incomingZoom(const std_msgs::Float32& msg);
 
     // Transforming the map to the right zoom & location
