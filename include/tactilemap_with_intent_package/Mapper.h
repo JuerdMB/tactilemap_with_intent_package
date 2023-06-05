@@ -17,14 +17,12 @@ const std::vector<std::string> basicLayers = {STATICLAYER};
 #define SCRN_DEFAULT_RATE 5
 #define SCRN_ASPECT_RATIO 1.5
 
-
 // Zoom easing
 const double ZOOM_DEFAULT = 10.;
 const double ZOOMERROR_THRESHOLD = .05;
 const double DAMPING_FACTOR = .6;
-
+#define ZOOM_DEFAULT_RATE 5.
 const std::string MAP_ZOOM_TOPIC = "/controller/map_zoom_level";
-
 
 class Mapper {
 public:
@@ -37,9 +35,8 @@ public:
     cv_bridge::CvImage getTransformedMapImg();
     nav_msgs::OccupancyGrid getTransformedOccupancy();
 
-    void publish_map_image();
     void send_map_to_screen();
-
+    void updateTransformedMap();                                                 // Monitor if first map has been received
 
 
 private:
@@ -50,9 +47,8 @@ private:
     std::string map_sub_topic_;
     ros::Subscriber map_sub_;
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);     // Incoming map from RTABMAP callback
-    grid_map::GridMap fullMap_;                                         // This is the total map, centered around the user
+    grid_map::GridMap globalMap_;                                         // This is the total map, centered around the user
     bool receivedMap;  
-    void transformFullMapToMe();                                                 // Monitor if first map has been received
 
     // Zoom level
     ros::Subscriber zoom_sub_;
@@ -62,16 +58,16 @@ private:
     grid_map::GridMap transformedMap_;                                  // The map corrected to the right zoom level & position
 
     // Resizing the map for display on the dotpad
-    nav_msgs::OccupancyGrid output_gridmap;
-    nav_msgs::OccupancyGrid scale_transformedMap_to_screen();
+    grid_map::GridMap scale_transformedMap_to_screen();
 
     // Sending out the maps
-    ros::Publisher transformedMap_occupancy_pub_;
-    ros::Publisher transformedMap_img_pub_;
-    tf::TransformListener odom_listener_;    
+    ros::Publisher output_occupancy_publisher_;
+    ros::Publisher output_previewimg_publisher_;
+    ros::Publisher output_detailedimg_publisher_;
+    tf::TransformListener odom_listener_;
 
     // ros::Timer mapUpdateTimer_;
-    // ros::Timer zoomUpdateTimer_;
+    ros::Timer zoomUpdateTimer_;
 
     void updateZoom();
     float targetZoom_, currentZoom_;

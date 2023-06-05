@@ -57,4 +57,4 @@ target_link_libraries(tmwi_node ${catkin_LIBRARIES})
 
 # Screen data transmitter node
 add_executable(socket_node src/socket_node.cpp)
-target_link_libraries(scrndata_transmitter_node ${catkin_LIBRARIES})
+target_link_libraries(socket_node ${catkin_LIBRARIES})

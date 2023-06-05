@@ -21,7 +21,7 @@ bool CONNECTED = false;
 int sockfd, n;
 char buffer[DEFAULT_BUFLEN];
 
-const std::string map_topic = "/tactilemap_with_intent/transformedmap_occupancy";
+const std::string map_topic = "/tactilemap_with_intent/outputmap_occupancy";
 
 void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
 {
