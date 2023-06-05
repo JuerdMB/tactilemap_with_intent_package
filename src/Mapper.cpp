@@ -1,7 +1,3 @@
-//
-// Created by juerd on 16-3-23.
-//
-
 #include "tactilemap_with_intent_package/Mapper.h"
 #include <grid_map_ros/GridMapRosConverter.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -12,9 +8,6 @@
 
 using namespace grid_map;
 
-/*
- * Constructor
- */
 Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_map::GridMap &localmap) : nodeHandle_(nodeHandle)
 {
     ROS_INFO("Mapper Started");
@@ -55,48 +48,27 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, grid_m
     zoomUpdateTimer_ = nodeHandle_.createTimer(ros::Duration(1.0 / zoomRate), std::bind(&Mapper::updateZoom, this));
 }
 
-/*
- * Default destructor
- */
 Mapper::~Mapper() {}
+
+/*
+ * Getters & Setters
+*/
+
+void Mapper::setZoom(double targetZoom)
+{
+    this->targetZoom_ = targetZoom;
+}
+
+
+/*
+ * CALLBACKS
+*/
 
 void Mapper::incomingZoom(const std_msgs::Float32& incomingZoom){
     this->targetZoom_ = incomingZoom.data;
     ROS_INFO("received map zoom: %f", incomingZoom.data);
 }
 
-/*
- * Zoom level setter for the TMWI
- */
-void Mapper::setZoom(double targetZoom)
-{
-    this->targetZoom_ = targetZoom;
-}
-
-/*
- * Get zoom from parameter server.
- */
-void Mapper::updateZoom()
-{
-    // Try to update zoomlevel
-    if (!nodeHandle_.getParam("zoom_level", targetZoom_))
-    {
-        ROS_INFO("Could not find parameter zoom_level; is it up?");
-        targetZoom_ = ZOOM_DEFAULT;
-        currentZoom_ = ZOOM_DEFAULT;
-    }
-
-    // Update the zoom level of the map
-    if (abs(currentZoom_ - targetZoom_) > ZOOMERROR_THRESHOLD)
-    {
-        // Temporary, add easing here
-        currentZoom_ = targetZoom_;
-    }
-}
-
-/*
- * Callback function for when new map is obtained
- */
 void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
 {
     if (!receivedMap)
@@ -116,9 +88,29 @@ void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
         ROS_INFO("Got an empty map from topic %s", this->map_sub_topic_);
 }
 
+
 /*
- * This method runs everytime the screen is updated
- */
+ * Methods for updating the map
+*/
+
+void Mapper::updateZoom()
+{
+    // Try to update zoomlevel
+    if (!nodeHandle_.getParam("zoom_level", targetZoom_))
+    {
+        ROS_INFO("Could not find parameter zoom_level; is it up?");
+        targetZoom_ = ZOOM_DEFAULT;
+        currentZoom_ = ZOOM_DEFAULT;
+    }
+
+    // Update the zoom level of the map
+    if (abs(currentZoom_ - targetZoom_) > ZOOMERROR_THRESHOLD)
+    {
+        // Temporary, add easing here
+        currentZoom_ = targetZoom_;
+    }
+}
+
 void Mapper::updateTransformedMap()
 {
     if (receivedMap)
@@ -168,7 +160,7 @@ void Mapper::updateTransformedMap()
                     ROS_INFO("Transformed Global map: Zoomlvl = %f \t Size = [%f, %f]", currentZoom_, x, y);
 
                     // Publish map to map & map image
-                    publishMap();
+                    publish_map_image();
                 }
                 else
                     ROS_INFO("Maps contain no geometry");
@@ -186,22 +178,17 @@ void Mapper::updateTransformedMap()
     else ROS_WARN("No map received!");
 };
 
-/*
- * Publish the transformed zoomed submap
- */
-void Mapper::publishMap()
-{
 
-    //     Publish transformed gridmap
+
+/*
+** Publishing the maps
+*/
+
+// Update the display of current TF map for display in RVIZ
+void Mapper::publish_map_image()
+{
     if (transformedmap_.getLength().x() && transformedmap_.getLength().y())
     {
-        ROS_INFO("Publishing maps of %f x %f", transformedmap_.getLength().x(), transformedmap_.getLength().y());
-
-        // Publish a new occupancy grid message to server
-        nav_msgs::OccupancyGrid transformedmap_occupancy_outmsg;
-        GridMapRosConverter::toOccupancyGrid(transformedmap_, basicLayers[0], 0., 1., transformedmap_occupancy_outmsg);
-        transformedmap_occupancy_pub_.publish(transformedmap_occupancy_outmsg);
-
         // Transform a CVImage of the map to the server
         cv_bridge::CvImage transformedmap_image_out;
         grid_map::GridMapRosConverter::toCvImage(transformedmap_, STATICLAYER, sensor_msgs::image_encodings::MONO8,
@@ -211,8 +198,23 @@ void Mapper::publishMap()
     }
     else
     {
-        ROS_INFO("Cannot publish tf map because it's still empty");
+        ROS_INFO("Attempted to publish image of TF map but it's still empty");
         ros::Duration(1.0).sleep();
     }
 }
 
+// Send map to the screen for display
+void Mapper::send_map_to_screen(){
+    if (transformedmap_.getLength().x() && transformedmap_.getLength().y())
+    {
+        ROS_INFO("Sending map to screen %f x %f", transformedmap_.getLength().x(), transformedmap_.getLength().y());
+        nav_msgs::OccupancyGrid transformedmap_occupancy_outmsg;
+        GridMapRosConverter::toOccupancyGrid(transformedmap_, basicLayers[0], 0., 1., transformedmap_occupancy_outmsg);
+        transformedmap_occupancy_pub_.publish(transformedmap_occupancy_outmsg);
+    }
+    else
+    {
+        ROS_INFO("Cannot publish tf map because it's still empty");
+        ros::Duration(1.0).sleep();
+    }
+}

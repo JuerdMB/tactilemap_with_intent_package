@@ -48,8 +48,13 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-        include 
+        include
 )
 
+# Tactile map main node
 add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
+
+# Screen data transmitter node
+add_executable(scrndata_transmitter_node src/scrndata_transmitter_node.cpp)
+target_link_libraries(scrndata_transmitter_node ${catkin_LIBRARIES})

@@ -38,6 +38,9 @@ public:
     cv_bridge::CvImage getTransformedMapImg();
     nav_msgs::OccupancyGrid getTransformedOccupancy();
 
+    void publish_map_image();
+    void send_map_to_screen();
+
 private:
     ros::NodeHandle nodeHandle_;
     std::string map_sub_topic_;
@@ -54,7 +57,6 @@ private:
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg); // Map callback
     void incomingZoom(const std_msgs::Float32& msg);
     void updateTransformedMap();
-    void publishMap();
 
     ros::Timer mapUpdateTimer_;
     ros::Timer zoomUpdateTimer_;

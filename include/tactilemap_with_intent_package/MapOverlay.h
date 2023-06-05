@@ -2,8 +2,7 @@
 // Created by juerd on 20-3-23.
 //
 
-#ifndef TACTILEMAP_WITH_INTENT_MAPOVERLAY_H
-#define TACTILEMAP_WITH_INTENT_MAPOVERLAY_H
+#pragma once
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
@@ -22,5 +21,3 @@ public:
 
 
 };
-
-#endif //TACTILEMAP_WITH_INTENT_MAPOVERLAY_H
