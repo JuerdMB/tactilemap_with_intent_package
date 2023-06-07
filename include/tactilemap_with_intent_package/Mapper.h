@@ -59,7 +59,6 @@ private:
     // Zoom level
     ros::Subscriber zoom_sub_;
     void incomingZoom(const std_msgs::Float32& msg);
-    void updateZoom();
     ros::Timer zoomUpdateTimer_;
 
     // Transforming the map to the right zoom & location
@@ -77,7 +76,7 @@ private:
     ros::Publisher output_detailedimg_publisher_;
     tf::TransformListener odom_listener_;
     void mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap);
-    std::vector<uint8_t> mapToDataArray(grid_map::GridMap &inputMap)
+    std::vector<uint8_t> mapToDataArray(grid_map::GridMap &inputMap);
 
     void updateZoom();
     float targetZoom_, currentZoom_;

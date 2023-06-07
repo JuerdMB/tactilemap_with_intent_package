@@ -5,7 +5,6 @@
 #include <std_msgs/Float64.h>
 #include <tf_conversions/tf_eigen.h>
 #include <tf/transform_datatypes.h>
-
 #include <grid_map_cv/grid_map_cv.hpp>
 
 const std::string SCREEN_DATA_TOPIC = "/topic";
