@@ -4,17 +4,9 @@
     <!-- General settings -->
     <arg name ="2D_Mapping"     default="false" />  
 
-    <!-- Topics for inter-node comms -->
-    <arg name="gridmap_topic"   default="/rtabmap/grid_map" />
-
-        <!-- Default values  -->
-    <arg name="screen_rate_hz"  default="5" />
-    <arg name="zoom_level"      default="3" />
-
-        <!-- Visualisation -->
+    <!-- Visualisation -->
     <arg name="use_rviz"        default="true" />
     <arg name="rviz_cfg"        default="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
-
 
     <!-- REALSENSE -->
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
@@ -31,25 +23,8 @@
         <arg name="rviz"               value="true"/>
         <arg name="rviz_cfg"           value="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
         <arg name="rtabmapviz"         value="false"/>
-        <arg name="gen_cloud_voxel"    value="0.15"/>
+        <arg name="gen_cloud_voxel"    value="0.2"/>
         <!-- <arg name="odom_max_rate"      value ="$(arg screen_rate_hz)"/> -->
     </include>
 
-
-    <!-- TACTILE MAP WITH INTENT -->
-    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="tmwi_node" output="screen">
-        <param name="gridmap_topic" value="$(arg gridmap_topic)" />
-        <param name="screen_rate" value="$(arg screen_rate_hz)" />
-        <param name="zoom_level" value="$(arg zoom_level)" />
-    </node>
-
-
-    <!-- SOCKET NODE -->
-    <node name="socket_node" pkg="tactilemap_with_intent_package" type="socket_node" output="screen"> 
-        </node>
-
-    <!-- LOGGING -->
-    <node pkg="rosservice" type="rosservice" name="set_rtabmap_log_level" args="call --wait /rtabmap/rtabmap/set_logger_level 'ros.rtabmap' 'Error'" />
-    <node pkg="rosservice" type="rosservice" name="set_odom_log_level" args="call --wait /rtabmap/rgbd_odometry/set_logger_level 'ros.rtabmap_odom' 'Error'" />
-    
 </launch>

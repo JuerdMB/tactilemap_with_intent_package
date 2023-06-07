@@ -7,7 +7,6 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "Tactilemap_with_intent");
     ros::NodeHandle nodeHandle("~");
 
-
     // Create Mapper that will take care of creating custom, transformed, zoomed maps
     grid_map::GridMap fullMap(basicLayers);
     grid_map::GridMap transformedMap(basicLayers);

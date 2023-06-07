@@ -25,19 +25,13 @@ const std::string map_topic = "/tactilemap_with_intent/outputmap_occupancy";
 
 void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
 {
-    ROS_INFO("Received a map... ");
     // First check if we are connected, if not, cannot do anything
     if (CONNECTED)
     {
         nav_msgs::MapMetaData info = message->info;
         const std::vector<int8_t> incomingMap = message->data;
 
-        if(incomingMap.size() > DEFAULT_BUFLEN) {
-            ROS_ERROR("Incoming map is too large for display! ");
-            return;
-        }
-
-        ROS_INFO("Got Map of %d x %d = %d elements... ", info.width, info.height, incomingMap.size());
+        ROS_INFO("Socket node got Map of %d x %d = %d elements... ", info.width, info.height, incomingMap.size());
 
         // Fill buffer with data
         for (int i = 0; i < incomingMap.size(); i++)
@@ -65,17 +59,15 @@ void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
         bzero(buffer, DEFAULT_BUFLEN); // Clear the buffer
 
         // Should receive data back from the buffer
-
-        n = read(sockfd, buffer, DEFAULT_BUFLEN);
-
-        if (n < 0)
-        {
-            ROS_ERROR("ERROR reading from socket");
-        }
-        else
-        {
-            ROS_INFO("Got back from server: %s\n", buffer);
-        }
+        // n = read(sockfd, buffer, DEFAULT_BUFLEN);
+        // if (n < 0)
+        // {
+        //     ROS_ERROR("ERROR reading from socket");
+        // }
+        // else
+        // {
+        //     ROS_INFO("Got back from server: %s\n", buffer);
+        // }
     }
 
     else
@@ -83,6 +75,48 @@ void attemptSendMap(const nav_msgs::OccupancyGrid::ConstPtr &message)
         ROS_INFO("But socket is not connected");
     }
 }
+
+// void mapToBytes(const std::vector<int8_t> inVector, uint8_t * buffer, int buflen){
+
+//     uint8_t dataContainer[300] = {0};
+//     int curcell = 0;
+
+//     // Loop through cells, first by row, then by column
+//     for (int bc_y=0; bc_y<10; bc_y++){
+
+//         for(int bc_x=0; bc_x<30; bc_x++){
+//             // This code runs for each individual cell
+// //            std::printf("%3d ", curcell);
+
+//             // Start coordinates for this cell
+//             int x_start = bc_x*2;
+//             int y_start = bc_y*4;
+
+// //            std::printf("{%2d,%2d} \t", x_start, y_start);
+
+//             // Loop through each of the dots of this cell
+//             for(int x=x_start; x<x_start+2; x++){   // First loop through left column downwards, then right
+
+//                 for(int y=y_start; y<y_start+4; y++){
+
+//                     uint8_t curPixel = inVector[y][x];
+//                     if (curPixel > 1) {
+//                         throw std::invalid_argument("Input vector must only contain 1's or 0's");
+//                     }
+
+//                     uint8_t curBitLoc = (x-x_start)*4 + (y-y_start);  // If in second row, add 4 to y to obtain location
+//                     outData[curcell] |= curPixel << (7-curBitLoc);
+// //                    std::printf("(%d)%d ", curBitLoc,curPixel);
+//                 }
+
+//             }
+
+// //            std::printf("\t evaluates to %d\n", outData[curcell]);
+//             curcell ++;
+//         }
+//     }
+    
+// }
 
 int main(int argc, char **argv)
 {
