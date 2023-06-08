@@ -7,7 +7,7 @@
 
         <!-- Default values  -->
     <arg name="screen_rate_hz"  default="5" />
-    <arg name="zoom_level"      default="3" />
+    <arg name="zoom_level"      default="8" />
 
   
     <!-- TACTILE MAP WITH INTENT -->

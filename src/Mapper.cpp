@@ -94,6 +94,7 @@ void Mapper::updateTransformedMap()
 {
     if (receivedMap)
     {
+        ROS_DEBUG("Updating transformed map... ");
 
         // Update and ease the zoom level on the map
         updateZoom();
@@ -140,6 +141,8 @@ void Mapper::updateTransformedMap()
                                                          transformedMap_image_out);
                 output_detailedimg_publisher_.publish(transformedMap_image_out);
             }
+            else 
+                ROS_ERROR("Map transform failed");
         }
 
         catch (tf::TransformException ex)
@@ -152,6 +155,7 @@ void Mapper::updateTransformedMap()
     else
     {
         // No map received yet
+        ROS_INFO("Cannot update transformed map: No map received yet");
     }
 };
 
@@ -166,33 +170,29 @@ void Mapper::publishMap()
         grid_map::GridMap scaledMap;
         mapToScreenResolution(transformedMap_, scaledMap);
 
-        ROS_INFO("Sending map to screen %d x %d", scaledMap.getSize()(0), scaledMap.getSize()(1));
-
         // Convert the output map to a CV Image and publish to 60x40 preview topic
         cv_bridge::CvImage transformedMap_image_out;
         grid_map::GridMapRosConverter::toCvImage(scaledMap, STATICLAYER, sensor_msgs::image_encodings::MONO8,
                                                  transformedMap_image_out);
         output_previewimg_publisher_.publish(transformedMap_image_out);
 
+        // Convert the map to an array of bytes (uint8) and publish to message for dotpad receiver
+        std::vector<uint8_t> data = mapToDataArray(scaledMap);
 
-        // Convert the map to an array of bytes (uint8) and publish on the
-        std_msgs::UInt8MultiArray screendata_msg;
+        if (data.size() != 0)
+        {
+            std_msgs::UInt8MultiArray screendata_msg; // Construct the message
+            screendata_msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
+            screendata_msg.layout.dim[0].size = data.size();
+            screendata_msg.layout.dim[0].stride = 1;
+            screendata_msg.layout.dim[0].label = "data";
+            screendata_msg.data.insert(screendata_msg.data.end(), data.begin(), data.end());
 
-        // TODO test data
-        std::vector<uint8_t> data = {0, 0, 0, 0}; //  = mapToDataArray(scaledMap);
-
-        int datasize = data.size();
-
-        screendata_msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
-        screendata_msg.layout.dim[0].size = datasize;
-        screendata_msg.data = data;
-        
-        screendata_msg.layout.dim[0].stride = 1;
-        screendata_msg.layout.dim[0].label = "data";
-        screendata_msg.data.resize(datasize);
-
-        ROS_INFO("Publishing data vector of size... %d", screendata_msg.data.size());
-        output_mapdata_publisher_.publish(screendata_msg);
+            output_mapdata_publisher_.publish(screendata_msg);
+            ROS_INFO("Published map data as a vector of size %d", screendata_msg.data.size());
+        }
+        else
+            ROS_ERROR("Cannot publish empty vector");
     }
 }
 
@@ -204,9 +204,9 @@ void Mapper::mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMa
     // Implementation for resolution change
     grid_map::GridMapCvProcessing::changeResolution(inputMap, outputMap, res);
 
-    ROS_INFO("Fitted map to screen from: [%dx%d]@res%.2f (%.2fx%.2f[m]) \t to [%dx%d]@res%.2f (%.2fx%2.f[m])",
-             inputMap.getSize()(0), inputMap.getSize()(1), inputMap.getResolution(), inputMap.getLength()(0), inputMap.getLength()(1),
-             outputMap.getSize()(0), outputMap.getSize()(1), outputMap.getResolution(), outputMap.getLength()(0), outputMap.getLength()(1));
+    ROS_INFO("Resized map from %2dx%2d cells (res=%.3f) to %2dx%2d cells (res=%.3f)",
+             inputMap.getSize()(0), inputMap.getSize()(1), inputMap.getResolution(),
+             outputMap.getSize()(0), outputMap.getSize()(1), outputMap.getResolution());
 }
 
 std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap)
@@ -215,64 +215,72 @@ std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap)
     int mapWidth = inputMap.getSize()(0);
     int mapHeight = inputMap.getSize()(1);
 
-    if (inputMap.getSize()(0) != 60 || inputMap.getSize()(1) != 40)
+    if (inputMap.getSize()(0) != 60)
     {
-        ROS_INFO("mapToDataArray received map of incorrect dimensions %dx%d", mapWidth, mapHeight);
+        ROS_ERROR("mapToDataArray: received map of incorrect dimensions %dx%d, returning empty vector", mapWidth, mapHeight);
         return {};
     }
 
-    std::vector<uint8_t> tempVector;
+    if (inputMap.getSize()(1) > 40)
+        ROS_INFO("mapToDataArray: received map of correct width but incorrect height %d, cutting of last %d rows", mapHeight, mapHeight-40);
+
+    // IF the amount of vertical rows in the map < 40, we cannot fill the whole screen;
+    // We can only loop through the
+
+    int lastRow = 40;
+
+    if (inputMap.getSize()(1) < 40)
+    {
+        ROS_INFO("mapToDataArray: input map insufficient length %d", mapHeight);
+        lastRow = mapHeight;
+    }
+
+    std::vector<uint8_t> output_data_vector(300);                           // Empty vector of full screen size
+    std::fill(output_data_vector.begin(), output_data_vector.end(), 0); // 0-initialize all values
 
     // Loop through 'braille cells' (collection of 8 map cells per braille cell), first by row, then by column
 
-    int curCell = 0; // This variable stores the current byte in tempVector that we wil be writing bits to
+    for (int braille_cell = 0; braille_cell < 300; braille_cell++)
+    {   
+        // Determine the start x & y values of this braille cell in the map
+        int column_start = (braille_cell * 2) % 60;
+        int row_start = ((braille_cell - braille_cell % 30) / 30) * 4;
+        
+        // Loop through each of the dots of this cell and write them to a bit in the output_data_vector
+        for (int x = column_start; x < column_start + 2; x++)
+        { // Loop through first column, then second
 
-    for (int braille_cell_row = 0; braille_cell_row < 10; braille_cell_row++)
-    { // Rows
+            for (int y=row_start; y<row_start + 4 && y<lastRow ; y++)
+            { // Loop through each of the for vertical rows per column
 
-        for (int braille_cell_column = 0; braille_cell_column < 30; braille_cell_column++)
-        {
+                grid_map::Index curIndex(x, y);
+                uint8_t curPixel = inputMap.at(STATICLAYER, curIndex);
 
-            if (curCell >= 300)
-                return tempVector; // temp func
-
-            // Braille cells are 4 rows high, 2 columns wide
-            int map_row_start = braille_cell_row * 4;
-            int map_column_start = braille_cell_column * 2;
-
-            // We have the start coordinates of this braille cell, now loop through each of its cells
-
-            // Loop through each of the dots of this cell
-            for (int x = map_column_start; x < map_column_start + 2; x++)
-            { // Loop through first column, then second
-
-                for (int y = map_row_start; y < map_row_start + 4; y++)
-                { // Loop through each of the for vertical rows per column
-
-                    grid_map::Index curIndex(x, y);
-
-                    uint8_t curPixel = inputMap.at(STATICLAYER, curIndex);
-
-                    if (curPixel > 1)
-                    {
-                        ROS_INFO("Input value cannot exceed 1");
-                    }
-
-                    if (curPixel < 0)
-                    {
-                        // Got an uncertainty cell
-                    }
-
-                    uint8_t curBitLoc = (x - map_column_start) * 4 + (y - map_row_start); // If in second row, add 4 to y to obtain location
-
-                    tempVector[curCell] |= curPixel << (7 - curBitLoc);
-                    //                    std::printf("(%d)%d ", curBitLoc,curPixel);
+                if (curPixel > 1)
+                {
+                    // ROS_INFO("Cell at %2d,%2d > 1, constrained to 1", x, y);
+                    curPixel = 1;
                 }
-            }
 
-            curCell++;
+                if (curPixel < 0)
+                {
+                    // ROS_INFO("Cell at %2d,%2d < 0, constrained to 0", x, y);
+                    // Got an uncertainty cell
+                    curPixel = 0;
+                }
+
+                // Determine current bit position in byte, and push the bit into the byte
+                uint8_t curBitLoc = (x - column_start) * 4 + (y - row_start); // If in second row, add 4 to y to obtain location
+                output_data_vector[braille_cell] |= curPixel << (7 - curBitLoc);
+            }
         }
     }
-    ROS_INFO("Returning thing of length %d!", tempVector.size());
-    return tempVector;
+    
+    // Printing data for test
+    // for(int i =0; i<300; i++){
+    //     std::printf("%3d ", output_data_vector[i]);
+    //     if( (i+1)%30 == 0 ) std::printf("\n");
+    // } std::printf("\n");
+
+    return output_data_vector;
 }
