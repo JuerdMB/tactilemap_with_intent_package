@@ -6,7 +6,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <tf/transform_broadcaster.h>
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
 #include "tactilemap_with_intent_package/MapDataConverter.h"
 #include "tactilemap_with_intent_package/Mapper.h"
 
@@ -28,17 +28,14 @@ int main(int argc, char **argv)
     ros::Rate rate(.5);
 
     // Load images and transform into image
-    const char *filepath = "/home/juerd/catkin_ws/src/tactilemap_with_intent_package/images/test_map_1.png";
-    cv::Mat image = cv::imread(filepath);
+    const char *filepath = "/home/juerd/catkin_ws/src/tactilemap_with_intent_package/images/grid_1.png";
+    cv::Mat image = cv::imread(filepath, cv::IMREAD_GRAYSCALE);   //, cv::IMREAD_REDUCED_GRAYSCALE_8
 
-    int width = image.cols;
-    int height = image.rows;
-
-    ROS_INFO("Read image of size %dx%d, ", width, height);
+    ROS_INFO("Read image size= %dx%d", image.cols, image.rows);
 
     while (ros::ok())
     {
-        if (width == 60 && height == 40)
+        if (image.cols == 60 && image.rows == 40)
         {
             br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "map"));
 
@@ -49,20 +46,23 @@ int main(int argc, char **argv)
             grid_map::Length length(60, 40);
             map.setGeometry(length, 1., grid_map::Position(0));
             ROS_INFO("Created map of %2dx%2d cells", map.getSize()(0), map.getSize()(1));
-            
+
             // Write the image to the map
-            for(int x=0; x<width; x++){
-                for(int y=0; y<height; y++){
-                    uint8_t pixel = image.at<int>(y,x);
-                    grid_map::Index index(x,y);
-                    map.at(layername, index) = pixel;
+            for (int row = 0; row < image.rows; row++)
+            {
+                for (int col = 0; col < image.cols; col++)
+                {
+                    uint8_t pixelValue = image.at<double>(row, col);
+                    grid_map::Index index(col, row);
+                    map.at(layername, index) = pixelValue;
+                    ROS_INFO("%3d,%3d = %d", col, row, pixelValue);
                 }
             }
 
-            // Publish the map
-            grid_map_msgs::GridMap gridmap_message;
-            converter.toMessage(map, gridmap_message);
-            output_image_publisher.publish(gridmap_message);
+            // Publish the preview
+            grid_map_msgs::GridMap preview_message;
+            converter.toMessage(map, preview_message);
+            output_image_publisher.publish(preview_message);
             ROS_INFO("Published image to %s", OUTPUT_PREVIEWIMG_TOPIC.c_str());
 
             // Publish the images
