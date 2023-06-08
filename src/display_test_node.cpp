@@ -28,8 +28,8 @@ int main(int argc, char **argv)
     ros::Rate rate(.5);
 
     // Load images and transform into image
-    const char *filepath = "/home/juerd/catkin_ws/src/tactilemap_with_intent_package/images/grid_1.png";
-    cv::Mat image = cv::imread(filepath, cv::IMREAD_GRAYSCALE);   //, cv::IMREAD_REDUCED_GRAYSCALE_8
+    const char *filepath = "/home/juerd/catkin_ws/src/tactilemap_with_intent_package/images/grid_2.png";
+    cv::Mat image = cv::imread(filepath); //, cv::IMREAD_GRAYSCALE
 
     ROS_INFO("Read image size= %dx%d", image.cols, image.rows);
 
@@ -47,16 +47,27 @@ int main(int argc, char **argv)
             map.setGeometry(length, 1., grid_map::Position(0));
             ROS_INFO("Created map of %2dx%2d cells", map.getSize()(0), map.getSize()(1));
 
+
             // Write the image to the map
             for (int row = 0; row < image.rows; row++)
             {
                 for (int col = 0; col < image.cols; col++)
                 {
-                    uint8_t pixelValue = image.at<double>(row, col);
+                    cv::Vec3b bgrPixel = image.at<cv::Vec3b>(row, col);
+                    float avg = (bgrPixel.val[0] + bgrPixel.val[1] + bgrPixel.val[2]) / 3.;
+                    uint8_t pixelVal = avg > 128.;
+
                     grid_map::Index index(col, row);
-                    map.at(layername, index) = pixelValue;
-                    ROS_INFO("%3d,%3d = %d", col, row, pixelValue);
+                    map.at(layername, index) = pixelVal;
+                    // ROS_INFO("%3d,%3d:\t b=%3d g=%3d r=%3d \t = %d", col, row, bgrPixel.val[0], bgrPixel.val[1], bgrPixel.val[2], pixelVal);
                 }
+            }
+
+            grid_map::Matrix &mapdata = map[layername];
+            for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator)
+            {
+                const size_t i = iterator.getLinearIndex();
+                ROS_INFO("%3ld=\t %f", i, mapdata(i));
             }
 
             // Publish the preview
