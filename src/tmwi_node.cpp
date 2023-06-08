@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     ros::Timer map_update_timer = nodeHandle.createTimer(ros::Duration(.5), std::bind(&Mapper::updateTransformedMap, &mapper));
 
     // Every 2 seconds, try to send the map to the screen
-    ros::Timer mapdata_transfer_timer = nodeHandle.createTimer(ros::Duration(2.), std::bind(&Mapper::send_map_to_screen, &mapper));
+    ros::Timer mapdata_transfer_timer = nodeHandle.createTimer(ros::Duration(2.), std::bind(&Mapper::publishMap, &mapper));
 
     while(ros::ok()){
         ros::spinOnce();

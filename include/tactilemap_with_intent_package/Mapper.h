@@ -64,9 +64,6 @@ private:
     // Transforming the map to the right zoom & location
     grid_map::GridMap transformedMap_;                                  // The map corrected to the right zoom level & position
     
-    // TODO transformedmap loshalen vna zoomedmap
-    grid_map::GridMap zoomedMap_;
-
     // Resizing the map for display on the dotpad
     grid_map::GridMap scale_transformedMap_to_screen();
 

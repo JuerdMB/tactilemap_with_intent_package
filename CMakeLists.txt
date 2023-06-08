@@ -54,7 +54,3 @@ include_directories(
 # Tactile map main node
 add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
-
-# Screen data transmitter node
-add_executable(socket_node src/socket_node.cpp)
-target_link_libraries(socket_node ${catkin_LIBRARIES})

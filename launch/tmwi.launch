@@ -17,8 +17,4 @@
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>
 
-    <!-- SOCKET NODE -->
-    <node name="socket_node" pkg="tactilemap_with_intent_package" type="socket_node" output="screen"> 
-        </node>
-
 </launch>

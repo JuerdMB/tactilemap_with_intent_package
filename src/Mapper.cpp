@@ -40,17 +40,20 @@ Mapper::~Mapper() {}
 
 void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
 {
-    if (!receivedMap)
-        receivedMap = true;
-
     nav_msgs::MapMetaData info = msg->info;
     // Check if the map has valid width & height
     if (info.width || info.height)
     {
-        GridMapRosConverter::fromOccupancyGrid(*msg, "static", globalMap_);
+        grid_map::GridMapRosConverter::fromOccupancyGrid(*msg, "static", globalMap_);
         ROS_INFO("Mapper got new map: wxh = %fx%f \t res = %f \t cells = %dx%d \n",
                  globalMap_.getLength()(0), globalMap_.getLength()(1), globalMap_.getResolution(),
                  globalMap_.getSize()(0), globalMap_.getSize()(1));
+    }
+
+    if (!receivedMap)
+    {
+        receivedMap = true;
+        updateTransformedMap(); // Create initial transformed map
     }
 }
 
@@ -104,6 +107,7 @@ void Mapper::updateTransformedMap()
 
         try
         {
+            odom_listener_.waitForTransform("/camera_link", "/map", ros::Time(0), ros::Duration(3.0));
             odom_listener_.lookupTransform("/camera_link", "/map", ros::Time(0), inputtransform);
 
             // Transform inputtransform rotation to euler angles
@@ -123,12 +127,10 @@ void Mapper::updateTransformedMap()
             bool success;
 
             // Transform map with isometry
-            transformedMap_ = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link");
-            zoomedMap_ = transformedMap_.getSubmap(position, length, success);
+            transformedMap_ = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link").getSubmap(position, length, success);
 
-            ROS_INFO( "Transformed map to %fx%f [m], with a resolution of %f \t %dx%d cells", 
-                                                    zoomedMap_.getLength()(0), zoomedMap_.getLength()(1), zoomedMap_.getResolution(),
-                                                    zoomedMap_.getSize()(0), zoomedMap_.getSize()(1) );
+            ROS_DEBUG("Created new, zoomed map of [%dx%d]@res%.2f (%.2fx%2.f[m])",
+                      transformedMap_.getSize()(0), transformedMap_.getSize()(1), transformedMap_.getResolution(), transformedMap_.getLength()(0), transformedMap_.getLength()(1));
 
             // If the transform is successful, publish image of the map to the server
             if (success)
@@ -142,7 +144,7 @@ void Mapper::updateTransformedMap()
 
         catch (tf::TransformException ex)
         {
-            ROS_ERROR("%s", ex.what());
+            ROS_ERROR("UpdateTransformedMap: %s", ex.what());
             ros::Duration(1.0).sleep();
         }
     }
@@ -164,7 +166,7 @@ void Mapper::publishMap()
         grid_map::GridMap scaledMap;
         mapToScreenResolution(transformedMap_, scaledMap);
 
-        ROS_DEBUG("Sending map to screen %d x %d", scaledMap.getSize()(0), scaledMap.getSize()(1));
+        ROS_INFO("Sending map to screen %d x %d", scaledMap.getSize()(0), scaledMap.getSize()(1));
 
         // Convert the output map to a CV Image and publish to 60x40 preview topic
         cv_bridge::CvImage transformedMap_image_out;
@@ -173,29 +175,49 @@ void Mapper::publishMap()
         output_previewimg_publisher_.publish(transformedMap_image_out);
 
 
-        // Convert the map to an array of bytes (uint8) and publish on the 
+        // Convert the map to an array of bytes (uint8) and publish on the
         std_msgs::UInt8MultiArray screendata_msg;
-        std_msgs::MultiArrayLayout screendata_msg_layout;
-        screendata_msg.data = mapToDataArray(scaledMap);
+
+        // TODO test data
+        std::vector<uint8_t> data = {0, 0, 0, 0}; //  = mapToDataArray(scaledMap);
+
+        int datasize = data.size();
+
+        screendata_msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
+        screendata_msg.layout.dim[0].size = datasize;
+        screendata_msg.data = data;
+        
+        screendata_msg.layout.dim[0].stride = 1;
+        screendata_msg.layout.dim[0].label = "data";
+        screendata_msg.data.resize(datasize);
+
+        ROS_INFO("Publishing data vector of size... %d", screendata_msg.data.size());
         output_mapdata_publisher_.publish(screendata_msg);
     }
 }
 
-void Mapper::mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap){
+void Mapper::mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap)
+{
     // Calculate the resolution for total size of 60x40 px
-    double res = transformedMap_.getLength()(0) / 60.;using namespace grid_map;
+    double res = inputMap.getLength()(0) / 60.;
 
     // Implementation for resolution change
     grid_map::GridMapCvProcessing::changeResolution(inputMap, outputMap, res);
+
+    ROS_INFO("Fitted map to screen from: [%dx%d]@res%.2f (%.2fx%.2f[m]) \t to [%dx%d]@res%.2f (%.2fx%2.f[m])",
+             inputMap.getSize()(0), inputMap.getSize()(1), inputMap.getResolution(), inputMap.getLength()(0), inputMap.getLength()(1),
+             outputMap.getSize()(0), outputMap.getSize()(1), outputMap.getResolution(), outputMap.getLength()(0), outputMap.getLength()(1));
 }
 
-std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap){
+std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap)
+{
 
     int mapWidth = inputMap.getSize()(0);
     int mapHeight = inputMap.getSize()(1);
 
-    if(inputMap.getSize()(0) != 60 || inputMap.getSize()(1) != 40) {
-        ROS_ERROR("mapToDataArray received map of incorrect dimensions %dx%d", mapWidth, mapHeight);
+    if (inputMap.getSize()(0) != 60 || inputMap.getSize()(1) != 40)
+    {
+        ROS_INFO("mapToDataArray received map of incorrect dimensions %dx%d", mapWidth, mapHeight);
         return {};
     }
 
@@ -203,12 +225,17 @@ std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap){
 
     // Loop through 'braille cells' (collection of 8 map cells per braille cell), first by row, then by column
 
-    int curCell = 0;    // This variable stores the current byte in tempVector that we wil be writing bits to
+    int curCell = 0; // This variable stores the current byte in tempVector that we wil be writing bits to
 
-    for(int braille_cell_row=0; braille_cell_row<10; braille_cell_row++) { // Rows
+    for (int braille_cell_row = 0; braille_cell_row < 10; braille_cell_row++)
+    { // Rows
 
-        for (int braille_cell_column=0; braille_cell_column<30; braille_cell_column++){
-            
+        for (int braille_cell_column = 0; braille_cell_column < 30; braille_cell_column++)
+        {
+
+            if (curCell >= 300)
+                return tempVector; // temp func
+
             // Braille cells are 4 rows high, 2 columns wide
             int map_row_start = braille_cell_row * 4;
             int map_column_start = braille_cell_column * 2;
@@ -216,32 +243,36 @@ std::vector<uint8_t> Mapper::mapToDataArray(grid_map::GridMap &inputMap){
             // We have the start coordinates of this braille cell, now loop through each of its cells
 
             // Loop through each of the dots of this cell
-            for(int x = map_column_start; x < map_column_start+2; x++){ //Loop through first column, then second
+            for (int x = map_column_start; x < map_column_start + 2; x++)
+            { // Loop through first column, then second
 
-                for(int y=map_row_start; y<map_row_start+4; y++){ // Loop through each of the for vertical rows per column
+                for (int y = map_row_start; y < map_row_start + 4; y++)
+                { // Loop through each of the for vertical rows per column
 
                     grid_map::Index curIndex(x, y);
 
                     uint8_t curPixel = inputMap.at(STATICLAYER, curIndex);
 
-                    if (curPixel > 1) {
-                        ROS_ERROR("Input value cannot exceed 1");
+                    if (curPixel > 1)
+                    {
+                        ROS_INFO("Input value cannot exceed 1");
                     }
 
-                    if(curPixel < 0){
+                    if (curPixel < 0)
+                    {
                         // Got an uncertainty cell
                     }
 
-                    uint8_t curBitLoc = (x-map_column_start)*4 + (y-map_row_start);  // If in second row, add 4 to y to obtain location
+                    uint8_t curBitLoc = (x - map_column_start) * 4 + (y - map_row_start); // If in second row, add 4 to y to obtain location
 
-                    tempVector[curCell] |= curPixel << (7-curBitLoc);
-//                    std::printf("(%d)%d ", curBitLoc,curPixel);
+                    tempVector[curCell] |= curPixel << (7 - curBitLoc);
+                    //                    std::printf("(%d)%d ", curBitLoc,curPixel);
                 }
             }
 
             curCell++;
         }
     }
-
+    ROS_INFO("Returning thing of length %d!", tempVector.size());
     return tempVector;
 }
