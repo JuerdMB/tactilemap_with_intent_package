@@ -9,7 +9,7 @@
 #include <tf/transform_listener.h>
 #include <grid_map_msgs/GridMap.h>
 #include <grid_map_ros/grid_map_ros.hpp>
-
+#include "tactilemap_with_intent_package/MapDataConverter.h"
 
 // Layers for map, currently only 1 layer
 const std::string STATICLAYER = "static";
@@ -30,7 +30,8 @@ const std::string OUTPUT_DATA_TOPIC = "/mapper/output_data";
 const std::string OUTPUT_PREVIEWIMG_TOPIC = "/mapper/preview_image";
 const std::string OUTPUT_DETAILEDIMG_TOPIC = "/mapper/detailed_image";
 
-class Mapper {
+class Mapper
+{
 public:
     Mapper(ros::NodeHandle nh, grid_map::GridMap &global_map, grid_map::GridMap &localmap);
     ~Mapper();
@@ -42,8 +43,8 @@ public:
     nav_msgs::OccupancyGrid getTransformedOccupancy();
 
     void publishMap();
-    void updateTransformedMap();                                                 // Monitor if first map has been received
-
+    void updateTransformedMap(); // Monitor if first map has been received
+    std::vector<uint8_t> mapToDataArray(grid_map::GridMap &inputMap, const std::string &layer);
 
 private:
     // Basic ROS requirements
@@ -52,18 +53,18 @@ private:
     // Getting the map from RTABMAP server
     std::string map_sub_topic_;
     ros::Subscriber map_sub_;
-    void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);     // Incoming map from RTABMAP callback
-    grid_map::GridMap globalMap_;                                         // This is the total map, centered around the user
-    bool receivedMap;  
+    void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg); // Incoming map from RTABMAP callback
+    grid_map::GridMap globalMap_;                                   // This is the total map, centered around the user
+    bool receivedMap;
 
     // Zoom level
     ros::Subscriber zoom_sub_;
-    void incomingZoom(const std_msgs::Float32& msg);
+    void incomingZoom(const std_msgs::Float32 &msg);
     ros::Timer zoomUpdateTimer_;
 
     // Transforming the map to the right zoom & location
-    grid_map::GridMap transformedMap_;                                  // The map corrected to the right zoom level & position
-    
+    grid_map::GridMap transformedMap_; // The map corrected to the right zoom level & position
+
     // Resizing the map for display on the dotpad
     grid_map::GridMap scale_transformedMap_to_screen();
 
@@ -73,9 +74,7 @@ private:
     ros::Publisher output_detailedimg_publisher_;
     tf::TransformListener odom_listener_;
     void mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap);
-    std::vector<uint8_t> mapToDataArray(grid_map::GridMap &inputMap);
 
     void updateZoom();
     float targetZoom_, currentZoom_;
 };
-

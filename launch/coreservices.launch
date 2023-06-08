@@ -24,7 +24,6 @@
         <arg name="rviz_cfg"           value="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
         <arg name="rtabmapviz"         value="false"/>
         <arg name="gen_cloud_voxel"    value="0.2"/>
-        <!-- <arg name="odom_max_rate"      value ="$(arg screen_rate_hz)"/> -->
     </include>
 
 </launch>

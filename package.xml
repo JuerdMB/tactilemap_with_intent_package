@@ -55,9 +55,10 @@
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>grid_map</build_depend>
-  <build_depend>grid_map_ros</build_depend>
-  <build_depend>grid_map_core</build_depend>
-  <build_depend>nav_msgs</build_depend>
+  <depend>grid_map_ros</depend>
+  <depend>grid_map_core</depend>
+  <depend>nav_msgs</depend>
+  <depend>cv_bridge</depend>
   <build_export_depend>costmap_2d</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
@@ -66,10 +67,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>tf_conversions</exec_depend>
-  <exec_depend>grid_map_core</exec_depend>
-  <exec_depend>grid_map_ros</exec_depend>
   <exec_depend>grid_map</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
+
 
 
   <!-- The export tag contains other, unspecified, tags -->

@@ -6,6 +6,7 @@ project(tactilemap_with_intent_package)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     OpenCV
+    cv_bridge
     costmap_2d
     roscpp
     std_msgs
@@ -37,6 +38,7 @@ catkin_package(
         grid_map_core
         grid_map_ros
         nav_msgs
+        cv_bridge
 )
 
 ###########
@@ -52,5 +54,8 @@ include_directories(
 )
 
 # Tactile map main node
-add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
+add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp src/MapDataConverter.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
+
+add_executable(test_node src/display_test_node.cpp src/Mapper.cpp src/MapDataConverter.cpp)
+target_link_libraries(test_node ${catkin_LIBRARIES})
