@@ -1,19 +1,10 @@
 <launch>
 
     <!-- PARAMETERS -->
+    <arg name="zoom_level"      default="4" />
 
-    <!-- Topics for inter-node comms -->
-    <arg name="gridmap_topic"   default="/rtabmap/grid_map" />
-
-        <!-- Default values  -->
-    <arg name="screen_rate_hz"  default="5" />
-    <arg name="zoom_level"      default="8" />
-
-  
     <!-- TACTILE MAP WITH INTENT -->
     <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="tmwi_node" output="screen">
-        <param name="gridmap_topic" value="$(arg gridmap_topic)" />
-        <param name="screen_rate" value="$(arg screen_rate_hz)" />
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>
 

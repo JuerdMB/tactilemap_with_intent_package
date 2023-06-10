@@ -54,8 +54,8 @@ include_directories(
 )
 
 # Tactile map main node
-add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp src/MapDataConverter.cpp)
+add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
 
-add_executable(test_node src/display_test_node.cpp src/Mapper.cpp src/MapDataConverter.cpp)
+add_executable(test_node src/display_test_node.cpp src/Mapper.cpp)
 target_link_libraries(test_node ${catkin_LIBRARIES})

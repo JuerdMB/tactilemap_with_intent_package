@@ -15,7 +15,7 @@
 
     <!-- RTABMAP -->
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
-        <arg name="rtabmap_args"       value="delete_db_on_start"/> <!--""-->
+        <arg name="rtabmap_args"       value=""/>         <!-- "delete_db_on_start" -->
         <arg name="depth_topic"        value="/camera/aligned_depth_to_color/image_raw"/>
         <arg name="frame_id"           value="/camera_link"/>
         <arg name="rgb_topic"          value="/camera/color/image_raw"/>
@@ -24,6 +24,8 @@
         <arg name="rviz_cfg"           value="$(find tactilemap_with_intent_package)/launch/config/rgbd.rviz" />
         <arg name="rtabmapviz"         value="false"/>
         <arg name="gen_cloud_voxel"    value="0.2"/>
+        <arg name="scan_cloud_assembling_noise_radius" value=".1" />
+        <arg name="scan_cloud_assembling_noise_min_neighbors" value="8000" />
     </include>
 
 </launch>
