@@ -1,9 +1,0 @@
-<launch>
-
-    <arg name="rviz_cfg" default="$(find tactilemap_with_intent_package)/launch/config/test.rviz" />
-
-    <node name="tester_node" pkg="tactilemap_with_intent_package" type="test_node" output="screen"/>
-
-     <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rviz_cfg)" />
-
-</launch>
