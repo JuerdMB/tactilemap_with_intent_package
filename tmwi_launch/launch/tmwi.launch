@@ -4,7 +4,7 @@
     <arg name="zoom_level"      default="4" />
 
     <!-- TACTILE MAP WITH INTENT -->
-    <node name="tactilemap_with_intent" pkg="tactilemap_with_intent_package" type="tmwi_node" output="screen">
+    <node name="tmwi_node" pkg="tmwi" type="tmwi_node" output="screen">
         <param name="zoom_level" value="$(arg zoom_level)" />
     </node>
 

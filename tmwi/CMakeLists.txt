@@ -1,20 +1,22 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(tactilemap_with_intent_package)
+project(tmwi)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    OpenCV
-    cv_bridge
-    costmap_2d
-    roscpp
-    std_msgs
-    nav_msgs
-    grid_map_core
-    grid_map_ros
-    tf
-    tf_conversions
+  cv_bridge
+  grid_map_core
+  grid_map_ros
+  grid_map_cv
+  nav_msgs
+  roscpp
+  std_msgs
+  tf
+  tf_conversions
 )
 
 ###################################
@@ -37,6 +39,7 @@ catkin_package(
         tf_conversions
         grid_map_core
         grid_map_ros
+        grid_map_cv
         nav_msgs
         cv_bridge
 )
@@ -48,14 +51,25 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
-        include
 )
 
-# Tactile map main node
-add_executable(tmwi_node src/tmwi_node.cpp src/Mapper.cpp)
+add_executable(${PROJECT_NAME}_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
 
-add_executable(test_node src/display_test_node.cpp src/Mapper.cpp)
-target_link_libraries(test_node ${catkin_LIBRARIES})
+add_executable(${PROJECT_NAME}_test_node src/test_node.cpp src/Mapper.cpp)
+target_link_libraries(${PROJECT_NAME}_test_node ${catkin_LIBRARIES})
+
+#############
+## Testing ##
+#############
+
+## Add gtest based cpp test target and link libraries
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_tmwi.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)

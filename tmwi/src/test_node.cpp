@@ -7,17 +7,15 @@
 #include <image_transport/image_transport.h>
 #include <tf/transform_broadcaster.h>
 #include <bits/stdc++.h>
-#include "tactilemap_with_intent_package/Mapper.h"
+#include "tmwi/Mapper.h"
 #include <filesystem>
-
-const std::string imageLayer = "image";
 
 // namespace fs = std::filesystem;
 
 void getMapFromImage(cv::Mat &inputimage, grid_map::GridMap &inputmap)
 {
     // Create map from image
-    inputmap.setFrameId("world");
+    inputmap.setFrameId("base_link");
 
     int lengthx = inputimage.rows;  // X is verticale richting!!!
     int lengthy = inputimage.cols; 
@@ -34,7 +32,7 @@ void getMapFromImage(cv::Mat &inputimage, grid_map::GridMap &inputmap)
             uint8_t pixelVal = avg > 128.;
 
             grid_map::Index index(y, x);
-            inputmap.at(imageLayer, index) = pixelVal;
+            inputmap.at(STATICLAYER, index) = pixelVal;
             // ROS_INFO("%3d,%3d:\t b=%3d g=%3d r=%3d \t = %d", col, row, bgrPixel.val[0], bgrPixel.val[1], bgrPixel.val[2], pixelVal);
         }
     }
@@ -70,8 +68,8 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        std::string directory = "/home/juerd/catkin_ws/src/tactilemap_with_intent_package/images/";
-        cv::Mat image;
+        std::string directory = "/home/juerd/catkin_ws/src/tactile_map_with_intent/tmwi_test/images/";
+        cv::Mat image;  
 
         // Try to read image
         do
@@ -101,13 +99,13 @@ int main(int argc, char **argv)
         }
         ROS_INFO("Succesfully loaded image: %dx%d", image.cols, image.rows);
 
-        grid_map::GridMap map({imageLayer});
+        grid_map::GridMap map({STATICLAYER});
         getMapFromImage(image, map);
         ROS_INFO("Transformed image into map of %2dx%2d cells", map.getSize()(1), map.getSize()(0));    // getSize()(0) = y-waarde, getSize()(1) = x-waarde
         // testPrintMap(map);
 
         // Publish the preview image as map for RVIZ display
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "map"));
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base_link", "map"));
         grid_map_msgs::GridMap gridmap_preview_message;
         converter.toMessage(map, gridmap_preview_message);
         pub_map_preview.publish(gridmap_preview_message);
@@ -115,12 +113,12 @@ int main(int argc, char **argv)
 
         // Publish as CV Image
         cv_bridge::CvImage map_image_out;
-        map_image_out = Mapper::get_image_from_map(map, imageLayer);
+        map_image_out = Mapper::get_image_from_map(map, STATICLAYER);
         pub_image_preview.publish(map_image_out);
         ROS_INFO("Published image to %s", TOPIC_IMAGE_DETAILED.c_str());
 
         // Publish the data
-        std::vector<uint8_t> data = Mapper::getDataArray(map, imageLayer);
+        std::vector<uint8_t> data = Mapper::getDataArray(map, STATICLAYER);
         std_msgs::UInt8MultiArray screendata_msg; // Construct the message
         screendata_msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
         screendata_msg.layout.dim[0].size = data.size();

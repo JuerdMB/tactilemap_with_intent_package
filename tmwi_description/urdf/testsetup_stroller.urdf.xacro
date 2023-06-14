@@ -1,1 +1,30 @@
-<?xml_version 
+<?xml version="1.0"?>
+<robot name="myfirst"  xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="M_PI" value="3.1415926535897931" />
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="-0.1 0 0.25" rpy="0 0 0"/>
+      <geometry>
+        <box size=".8 .7 .5"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="${M_PI/2} 0 ${M_PI/2}"/>
+      <geometry>
+        <mesh filename="package://tmwi_description/meshes/d435.dae" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="base_to_camera" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0 0 .8" rpy="0 ${M_PI/10} 0"/>
+  </joint>
+
+</robot>

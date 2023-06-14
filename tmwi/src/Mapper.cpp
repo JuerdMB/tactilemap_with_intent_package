@@ -1,4 +1,4 @@
-#include "tactilemap_with_intent_package/Mapper.h"
+#include "tmwi/Mapper.h"
 #include <grid_map_ros/GridMapRosConverter.hpp>
 #include <grid_map_cv/GridMapCvProcessing.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -10,19 +10,15 @@
 
 const float PI = 3.1415;
 
+grid_map::GridMapRosConverter converter;
+
 Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map) : nodeHandle_(nodeHandle)
 {
-    map_sub_ = nodeHandle_.subscribe(INPUT_MAP_TOPIC, 1, &Mapper::incomingMap, this);
+    sub_rtabmap_ = nodeHandle_.subscribe(TOPIC_INPUT_MAP, 1, &Mapper::incomingMap, this);
 
     pub_bytes_dotpad = nodeHandle_.advertise<std_msgs::UInt8MultiArray>(TOPIC_DOTPAD_DATA, 1);
     pub_image_screensized = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_SCREENSIZED, 1);
     pub_image_highres = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_DETAILED, 1);
-
-    ///////
-
-    pub_map_highres = nodeHandle_.advertise<grid_map_msgs::GridMap>(TOPIC_MAP_DETAILED, 1);
-
-    ///////
 
     // Initialize empty global GridMap
     this->globalMap_ = global_map;
@@ -31,8 +27,11 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map) : node
 
     receivedMap = false;
 
-    if (!nodeHandle_.getParam("/tactilemap_with_intent/zoom_level", zoom_level))
+    if (!nodeHandle_.getParam(PARAM_ZOOM_LEVEL, zoom_level))
         zoom_level = DEFAULT_ZOOM;
+
+
+    ROS_INFO("Set up Mapper");
 }
 
 Mapper::~Mapper() {}
@@ -41,6 +40,8 @@ Mapper::~Mapper() {}
 
 void Mapper::incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg)
 {
+    ROS_INFO("Received Map from RTABMAP");
+
     nav_msgs::MapMetaData info = msg->info;
     // Check if the map has valid width & height
     if (info.width || info.height)
@@ -64,7 +65,7 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
         try
         {
             // Get the current zoom level
-            if (!nodeHandle_.getParam("/tactilemap_with_intent/zoom_level", zoom_level))
+            if (!nodeHandle_.getParam(PARAM_ZOOM_LEVEL, zoom_level))
             {
                 return ZOOM_LOOKUP_ERROR;
             }
@@ -76,8 +77,8 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
 
             // Try to get the current robot pose
             tf::StampedTransform robot_pose;
-            odom_listener_.waitForTransform("/camera_link", "/map", ros::Time(0), ros::Duration(3.0));
-            odom_listener_.lookupTransform("/camera_link", "/map", ros::Time(0), robot_pose);
+            odom_listener_.waitForTransform("/base_link", "/map", ros::Time(0), ros::Duration(3.0));
+            odom_listener_.lookupTransform("/base_link", "/map", ros::Time(0), robot_pose);
 
             // Transform robot_pose rotation to euler angles
             tfScalar roll, pitch, yaw;
@@ -96,7 +97,7 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
             bool success;
 
             // Transform map with isometry
-            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "camera_link").getSubmap(grid_map::Position(0, 0), length, success);
+            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(grid_map::Position(0, 0), length, success);
 
             // Return
             if (success)
@@ -113,8 +114,6 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
     else // No map received yet
         return NO_MAP_RECEIVED;
 };
-
-// SENDING OUT THE MAPS
 
 void Mapper::publishTransformedZoomedMap()
 { // Send map to the screen for display
@@ -170,7 +169,7 @@ void Mapper::publishTransformedZoomedMap()
         map_image_out = get_image_from_map(transformedZoomedMap, STATICLAYER);
         pub_image_highres.publish(map_image_out);
 
-        // SCREEN RESOLUTION PREVIEW
+        // SCREEN RESOLUTION PREVIEW | IMAGE & GRIDMAP
         map_image_out = get_image_from_map(screensizedMap, STATICLAYER);
         pub_image_screensized.publish(map_image_out);
 
@@ -194,6 +193,7 @@ void Mapper::publishTransformedZoomedMap()
 }
 
 // STATIC HELPER FUNCTIONS
+
 void Mapper::mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap)
 {
     // Calculate the resolution for total size of 60x40 px
@@ -277,6 +277,7 @@ std::vector<uint8_t> Mapper::getDataArray(grid_map::GridMap &inputMap, const std
     std::fill(output_data_vector.begin(), output_data_vector.end(), 0); // 0-initialize all values
 
     // Loop through 'braille cells' (collection of 8 map cells per braille cell), first by row, then by column
+    // char debugstring[100] = "";
 
     for (int braille_cell = 0; braille_cell < 300; braille_cell++)
     {
@@ -286,7 +287,7 @@ std::vector<uint8_t> Mapper::getDataArray(grid_map::GridMap &inputMap, const std
 
         // Print for debug
         // ROS_INFO("Braille Cell %3d: Col_start=%3d, Row_start=%3d", braille_cell, col_start, row_start);
-        // std::cout << "Braille Cell " << braille_cell << ": Col_start=" << col_start << " , Row_start=" << row_start << " Bytes: ";
+        // sprintf(debugstring, "%3d\tx0=%2d y0=%2d\tbytes= ", braille_cell, col_start, row_start);
 
         // Loop through each of the dots of this cell and write them to a bit in the output_data_vector
         for (int x = col_start; x < col_start + 2; x++)
@@ -323,15 +324,15 @@ std::vector<uint8_t> Mapper::getDataArray(grid_map::GridMap &inputMap, const std
                     curPixel = 0;
                     // ROS_WARN("Insufficient rows in inputmap: %3d; Setting value of %2dth bit of %3dth byte in output array to 0", lastRow, curBitLoc, braille_cell);
                 }
-
-                // std::cout << "[" << (unsigned int)curBitLoc << "]=" << (unsigned int)curPixel;
-                output_data_vector[braille_cell] |= curPixel << (7 - curBitLoc);
+                // sprintf(debugstring, "%s %d ", debugstring, (unsigned int)curPixel);
+                output_data_vector[braille_cell] |= curPixel << (curBitLoc);
             }
         }
-        // std::cout << "\n";
+        // sprintf(debugstring, "%s\tequates to %d", debugstring, (unsigned int)output_data_vector[braille_cell]);
+        // ROS_INFO("%s", debugstring);
     }
 
-    print_output_data(output_data_vector);
+    // print_output_data(output_data_vector);
 
     return output_data_vector;
 }
@@ -345,17 +346,17 @@ void Mapper::print_output_data(std::vector<uint8_t> &data)
         return;
     }
 
-    const int linelength = 140;
-    char linebuffer[linelength] = "";
+    // const int linelength = 140;
+    // char linebuffer[linelength] = "";
 
-    for (int i = 0; i < 300; i++)
-    {
-        sprintf(linebuffer, "%s %3d", linebuffer, (unsigned int)data[i]);
+    // for (int i = 0; i < 300; i++)
+    // {
+    //     sprintf(linebuffer, "%s %3d", linebuffer, (unsigned int)data[i]);
 
-        if (i % 30 == 0)
-        {
-            std::cout << linebuffer << '\n';
-            memset(linebuffer, 0, linelength); // set buffer to 0
-        }
-    }
+    //     if (i != 0 && i % 30 == 0)
+    //     {
+    //         std::cout << linebuffer << '\n';
+    //         memset(linebuffer, 0, linelength); // set buffer to 0
+    //     }
+    // }
 }

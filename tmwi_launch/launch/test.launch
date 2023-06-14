@@ -1,0 +1,9 @@
+<launch>
+
+    <arg name="rviz_cfg" default="$(find tmwi_launch)/launch/config/test.rviz" />
+
+    <node name="tmwi_test_node" pkg="tmwi" type="tmwi_test_node" output="screen"/>
+
+     <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rviz_cfg)" />
+
+</launch>

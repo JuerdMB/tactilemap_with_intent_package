@@ -8,6 +8,7 @@
 #include <grid_map_msgs/GridMap.h>
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <string>
+#include <std_msgs/Bool.h>
 
 // Layers for map, currently only 1 layer
 const std::string STATICLAYER = "static";
@@ -19,9 +20,13 @@ const int SCREEN_WIDTH = 60;
 const int SCREEN_HEIGHT = 40;
 const double DEFAULT_ZOOM = 3.;
 
+// Subscribed topics
+const std::string PARAM_ZOOM_LEVEL = "/tmwi_node/zoom_level";
+
 // Publish topics
-const std::string INPUT_MAP_TOPIC = "/rtabmap/grid_map";
+const std::string TOPIC_INPUT_MAP = "/rtabmap/grid_map";
 const std::string TOPIC_DOTPAD_DATA = "/mapper/output_data";
+const std::string TOPIC_SCREEN_FINISHED = "/dotpad/screen_finished";
 
 // Publish previews
 const std::string TOPIC_IMAGE_SCREENSIZED = "/mapper/preview_image";
@@ -56,12 +61,13 @@ public:
     static std::vector<uint8_t> getDataArray(grid_map::GridMap &inputMap, const std::string &layer);
     static void mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap);
     static void print_output_data(std::vector<uint8_t> &data);
+
 private:
     // Basic ROS requirements
     ros::NodeHandle nodeHandle_;
     
     // Listeners
-    ros::Subscriber map_sub_;
+    ros::Subscriber sub_rtabmap_;
     tf::TransformListener odom_listener_;
 
     // Publishers
@@ -69,10 +75,9 @@ private:
     ros::Publisher pub_image_screensized;
     ros::Publisher pub_image_highres;
 
-    ros::Publisher pub_map_highres;
-
     // Getting the map from RTABMAP server
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg);     // Incoming map from RTABMAP callback
     grid_map::GridMap globalMap_;                                       // Full map that will contain all layers, global frame
     bool receivedMap;
+
 };
