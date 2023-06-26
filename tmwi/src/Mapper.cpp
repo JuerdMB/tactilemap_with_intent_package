@@ -19,6 +19,7 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map) : node
     pub_bytes_dotpad = nodeHandle_.advertise<std_msgs::UInt8MultiArray>(TOPIC_DOTPAD_DATA, 1);
     pub_image_screensized = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_SCREENSIZED, 1);
     pub_image_highres = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_DETAILED, 1);
+    pub_image_lowbw = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_LOWBW, 1);
 
     // Initialize empty global GridMap
     this->globalMap_ = global_map;
@@ -97,7 +98,7 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
             bool success;
 
             // Transform map with isometry
-            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(grid_map::Position(0, 0), length, success);
+            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(grid_map::Position(zoom_level/2., 0), length, success);
 
             // Return
             if (success)
@@ -166,12 +167,15 @@ void Mapper::publishTransformedZoomedMap()
         cv_bridge::CvImage map_image_out;
 
         // HIGH RES TRANSFORMED
-        map_image_out = get_image_from_map(transformedZoomedMap, STATICLAYER);
+        map_image_out = get_painted_image(transformedZoomedMap, STATICLAYER);
         pub_image_highres.publish(map_image_out);
 
         // SCREEN RESOLUTION PREVIEW | IMAGE & GRIDMAP
-        map_image_out = get_image_from_map(screensizedMap, STATICLAYER);
+        map_image_out = get_painted_image(screensizedMap, STATICLAYER);
         pub_image_screensized.publish(map_image_out);
+
+        map_image_out = get_lowbw_image(screensizedMap, STATICLAYER);
+        pub_image_lowbw.publish(map_image_out);
 
         // // Convert the map to an array of bytes (uint8) and publish to message for dotpad receiver
         std::vector<uint8_t> data = Mapper::getDataArray(screensizedMap, STATICLAYER);
@@ -200,10 +204,10 @@ void Mapper::mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMa
     double res = inputMap.getLength().y() / SCREEN_WIDTH; // Breedterichting (Y-richting in een GridMap) moet 60 px worden
 
     // Implementation for resolution change
-    grid_map::GridMapCvProcessing::changeResolution(inputMap, outputMap, res);
+    grid_map::GridMapCvProcessing::changeResolution(inputMap, outputMap, res, cv::INTER_NEAREST);
 }
 
-cv_bridge::CvImage Mapper::get_image_from_map(grid_map::GridMap &input_map, const std::string &layer)
+cv_bridge::CvImage Mapper::get_painted_image(grid_map::GridMap &input_map, const std::string &layer)
 {
     cv_bridge::CvImage outputImage;
     grid_map::GridMapRosConverter::toCvImage(input_map, layer, sensor_msgs::image_encodings::RGB8, 0., 1., outputImage);
@@ -212,7 +216,7 @@ cv_bridge::CvImage Mapper::get_image_from_map(grid_map::GridMap &input_map, cons
     int numChannels = outputImage.image.channels();
     int width = outputImage.image.cols;
     int height = outputImage.image.rows;
-    int centerLoc[2] = {width / 2, height / 2};
+    int centerLoc[2] = {width / 2, height-1};
 
     // Loop through all pixels and change contrast
     // for (int y=0; y<height; y++)
@@ -231,9 +235,7 @@ cv_bridge::CvImage Mapper::get_image_from_map(grid_map::GridMap &input_map, cons
 
     // Paint selected location red
     std::vector<cv::Point> pointsToPaint = {
-        cv::Point(centerLoc[0], centerLoc[1] - 1), // 1 above center location
         cv::Point(centerLoc[0], centerLoc[1]),     // center location
-        cv::Point(centerLoc[0], centerLoc[1] + 1)  // 1 below center location
     };
     for (cv::Point point : pointsToPaint)
     {
@@ -359,4 +361,10 @@ void Mapper::print_output_data(std::vector<uint8_t> &data)
     //         memset(linebuffer, 0, linelength); // set buffer to 0
     //     }
     // }
+}
+
+cv_bridge::CvImage Mapper::get_lowbw_image(grid_map::GridMap &input_map, const std::string &layer){
+    cv_bridge::CvImage outputImage;
+    grid_map::GridMapRosConverter::toCvImage(input_map, layer, sensor_msgs::image_encodings::TYPE_8UC1, 0., 1., outputImage);
+    return outputImage;
 }

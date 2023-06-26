@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 
         // Publish as CV Image
         cv_bridge::CvImage map_image_out;
-        map_image_out = Mapper::get_image_from_map(map, STATICLAYER);
+        map_image_out = Mapper::get_painted_image(map, STATICLAYER);
         pub_image_preview.publish(map_image_out);
         ROS_INFO("Published image to %s", TOPIC_IMAGE_DETAILED.c_str());
 

@@ -1,0 +1,14 @@
+<launch>
+    
+    <!-- <machine name="juerd-MacBookPro" address="localhost" user="juerd" password="airobotics" env-loader="~/scripts/startup_launch.sh" default="true"/>
+    <include file="$(find tmwi_launch)/launch/coreservices.launch" />
+    <include file="$(find tmwi_launch)/launch/tmwi.launch" /> -->
+
+    <!-- <machine name="Dell" address="Dell" user="\juerd-local" password="23Junij" env-loader="C:\catkin_ws\devel\setup.bat" default="true"/>
+    <include file="$(find dotpad_receiver)/launch/receiver.launch" /> -->
+
+    <machine name="lenovo" address="lenovo" user="juerd" env-loader="~/catkin_ws/env.sh"/>
+    <include machine="lenovo" file="$(find tmwi_controller)/launch/tmwi_controller.launch" />
+    
+
+</launch>   

@@ -1,0 +1,10 @@
+<launch>
+    
+    <!-- Start all services-->
+    <include file="$(find tmwi_launch)/launch/full.launch" />
+
+    <!-- Start recording -->
+    <node pkg="rosbag" type="record" name="rosbag_record"
+       args="record -o ~/bagfiles/experiment /mapper/lowbw_image /camera/color/image_raw/compressed"/>
+
+</launch>   

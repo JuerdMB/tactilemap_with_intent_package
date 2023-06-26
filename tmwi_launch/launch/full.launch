@@ -1,0 +1,6 @@
+<launch>
+    
+    <include file="$(find tmwi_launch)/launch/coreservices.launch" />
+    <include file="$(find tmwi_launch)/launch/tmwi.launch" />
+
+</launch>   

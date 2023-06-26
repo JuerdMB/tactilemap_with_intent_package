@@ -33,6 +33,7 @@ const std::string TOPIC_IMAGE_SCREENSIZED = "/mapper/preview_image";
 const std::string TOPIC_MAP_SCREENSIZED = "/mapper/screensized_map";
 const std::string TOPIC_IMAGE_DETAILED = "/mapper/detailed_image";
 const std::string TOPIC_MAP_DETAILED = "/mapper/transformed_detailed_map";
+const std::string TOPIC_IMAGE_LOWBW = "/mapper/lowbw_image";
 
 const float contrast = .9;
 
@@ -57,7 +58,8 @@ public:
     double zoom_level;
 
     // Static member functions
-    static cv_bridge::CvImage get_image_from_map(grid_map::GridMap &input_map, const std::string &layer);
+    static cv_bridge::CvImage get_painted_image(grid_map::GridMap &input_map, const std::string &layer);
+    static cv_bridge::CvImage get_lowbw_image(grid_map::GridMap &input_map, const std::string &layer);
     static std::vector<uint8_t> getDataArray(grid_map::GridMap &inputMap, const std::string &layer);
     static void mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap);
     static void print_output_data(std::vector<uint8_t> &data);
@@ -74,6 +76,7 @@ private:
     ros::Publisher pub_bytes_dotpad;
     ros::Publisher pub_image_screensized;
     ros::Publisher pub_image_highres;
+    ros::Publisher pub_image_lowbw;
 
     // Getting the map from RTABMAP server
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg);     // Incoming map from RTABMAP callback
