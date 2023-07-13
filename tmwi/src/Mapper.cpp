@@ -84,6 +84,7 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
             // Transform robot_pose rotation to euler angles
             tfScalar roll, pitch, yaw;
             robot_pose.getBasis().getRPY(roll, pitch, yaw);
+            // yaw = 0; Create map with constant direction
             roll = 0.;
             pitch = 0.;
 
@@ -98,7 +99,8 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
             bool success;
 
             // Transform map with isometry
-            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(grid_map::Position(zoom_level/2., 0), length, success);
+            grid_map::Position self(zoom_level/2., 0); 
+            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(self, length, success);
 
             // Return
             if (success)
