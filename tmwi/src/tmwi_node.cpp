@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     grid_map::GridMap global_map;
     Mapper mapper(nodeHandle, global_map);
 
-    ros::Timer timer = nodeHandle.createTimer(ros::Duration(.2), std::bind(&Mapper::publishTransformedZoomedMap, &mapper));
+    ros::Timer timer = nodeHandle.createTimer(ros::Duration(.5), std::bind(&Mapper::publishTransformedZoomedMap, &mapper));
 
     while(ros::ok()){
         ros::spinOnce();

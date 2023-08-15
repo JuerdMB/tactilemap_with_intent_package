@@ -1,0 +1,272 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 0
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /MapCloud1
+        - /RTabmap Gridmap1
+        - /Screen_Image1
+      Splitter Ratio: 0.45387452840805054
+    Tree Height: 1419
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+    Name: Tool Properties
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Name: Time
+    SyncMode: 0
+    SyncSource: Info
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: map
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_link:
+          Value: true
+        camera_aligned_depth_to_color_frame:
+          Value: false
+        camera_color_frame:
+          Value: false
+        camera_color_optical_frame:
+          Value: false
+        camera_depth_frame:
+          Value: false
+        camera_depth_optical_frame:
+          Value: false
+        camera_link:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        map:
+          odom:
+            base_link:
+              camera_link:
+                camera_aligned_depth_to_color_frame:
+                  camera_color_optical_frame:
+                    {}
+                camera_color_frame:
+                  {}
+                camera_depth_frame:
+                  camera_depth_optical_frame:
+                    {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /camera/color/image_raw
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: RGB Camera Feed
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Alpha: 0.10000000149011612
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rtabmap_rviz_plugins/MapCloud
+      Cloud decimation: 4
+      Cloud from scan: false
+      Cloud max depth (m): 4
+      Cloud min depth (m): 0
+      Cloud voxel size (m): 0.009999999776482582
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Download graph: false
+      Download map: false
+      Download namespace: rtabmap
+      Enabled: true
+      Filter ceiling (m): 0
+      Filter floor (m): 0
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: MapCloud
+      Node filtering angle (degrees): 30
+      Node filtering radius (m): 0
+      Position Transformer: XYZ
+      Queue Size: 1
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /rtabmap/mapData
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Class: rtabmap_rviz_plugins/Info
+      Enabled: false
+      Name: Info
+      Queue Size: 10
+      Topic: /rtabmap/info
+      Unreliable: false
+      Value: false
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: RTabmap Gridmap
+      Topic: /rtabmap/grid_map
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /mapper/preview_image
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: LowRes Preview Map Image
+      Normalize Range: true
+      Queue Size: 1
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /mapper/detailed_image
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Detailed Map Image
+      Normalize Range: true
+      Queue Size: 1
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /camera_screen/color/image_raw
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Screen_Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
+      Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+  Value: true
+  Views:
+    Current:
+      Class: rviz/ThirdPersonFollower
+      Distance: 3.009943962097168
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.5653981566429138
+      Target Frame: base_link
+      Yaw: 3.0764994621276855
+    Saved: ~
+Window Geometry:
+  Detailed Map Image:
+    collapsed: false
+  Displays:
+    collapsed: false
+  Height: 1672
+  Hide Left Dock: false
+  Hide Right Dock: false
+  LowRes Preview Map Image:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000032f00000633fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b000fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000b0fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afc0000002700000633000001bc01000039fa000000000100000002fb000000100044006900730070006c0061007900730100000000ffffffff000001f700fffffffb0000001e005200470042002000430061006d006500720061002000460065006500640100000000000005ae0000012b00fffffffb0000001800530063007200650065006e005f0049006d006100670065000000023d000002640000002600fffffffc00000394000002c60000000000fffffffaffffffff0100000002fb0000002400440065007400610069006c006500640020004d0061007000200049006d0061006700650000000000ffffffff0000014800fffffffb00000030004c006f0077005200650073002000500072006500760069006500770020004d0061007000200049006d00610067006500000000000000044a000001ae00fffffffb0000000a0049006d006100670065000000057d0000011d000000000000000000000001000001b700000633fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000027000006330000013200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a0000006dc00fffffffb0000000800540069006d00650100000000000004500000000000000000000006420000063300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  RGB Camera Feed:
+    collapsed: false
+  Screen_Image:
+    collapsed: false
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 2880
+  X: 0
+  Y: 54
