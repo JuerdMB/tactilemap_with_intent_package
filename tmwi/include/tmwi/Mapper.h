@@ -63,6 +63,9 @@ public:
     static std::vector<uint8_t> getDataArray(grid_map::GridMap &inputMap, const std::string &layer);
     static void mapToScreenResolution(grid_map::GridMap &inputMap, grid_map::GridMap &outputMap);
     static void print_output_data(std::vector<uint8_t> &data);
+    
+    bool receivedMap;
+
 
 private:
     // Basic ROS requirements
@@ -81,6 +84,5 @@ private:
     // Getting the map from RTABMAP server
     void incomingMap(const nav_msgs::OccupancyGrid::ConstPtr &msg);     // Incoming map from RTABMAP callback
     grid_map::GridMap globalMap_;                                       // Full map that will contain all layers, global frame
-    bool receivedMap;
 
 };

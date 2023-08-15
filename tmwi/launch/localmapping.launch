@@ -5,7 +5,7 @@
     <!-- General settings -->
     <arg name="localization_only"                   default="false" />
     <arg name="delete_db"                           default="false" />
-    <arg name="film_screen"                         default="true"/>
+    <arg name="film_screen"                         default="false"/>
 
     <!-- Visualisation -->
     <arg name="use_rviz"                            default="false" />
@@ -71,10 +71,10 @@
 
 
         <!-- Localization Mode-->
-        <group if="localization_only" >
+        <!-- <group if="localization_only" >
             <arg name="localization" value="true" />
             <param name="Mem/IncrementalMemory" type="string" value="false"/>
-        </group>
+        </group> -->
 
         <!-- Point Cloud generation settings-->
         <arg name="gen_cloud_voxel"    value="0.05"/>
