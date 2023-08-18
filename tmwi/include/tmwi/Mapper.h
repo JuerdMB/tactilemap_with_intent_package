@@ -9,6 +9,7 @@
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <string>
 #include <std_msgs/Bool.h>
+#include <urdf/model.h>
 
 // Layers for map, currently only 1 layer
 const std::string STATICLAYER = "static";
@@ -20,9 +21,16 @@ const int SCREEN_WIDTH = 60;
 const int SCREEN_HEIGHT = 40;
 const double DEFAULT_ZOOM = 3.;
 
+// Map Mode
+enum mapmode {
+    AHEAD,
+    AHEAD_SELFSIZE,
+    CENTERED,
+    STATIC_MAP
+};
+
 // Subscribed topics
 const std::string PARAM_ZOOM_LEVEL = "/tmwi_node/zoom_level";
-
 
 // Publish topics
 const std::string TOPIC_INPUT_MAP = "/rtabmap/grid_map";
@@ -49,7 +57,7 @@ typedef enum {
 class Mapper
 {
 public:
-    Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map);
+    Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, mapmode map_mode);
     ~Mapper();
 
     void publishTransformedZoomedMap();
@@ -57,6 +65,10 @@ public:
 
     // Params
     double zoom_level;
+    double selfsize_x, selfsize_y;
+
+    // Mode
+    bool set_map_mode(mapmode mode);
 
     // Static member functions
     static cv_bridge::CvImage get_painted_image(grid_map::GridMap &input_map, const std::string &layer);
@@ -71,6 +83,9 @@ public:
 private:
     // Basic ROS requirements
     ros::NodeHandle nodeHandle_;
+
+    // Map mode
+    mapmode map_mode;
     
     // Listeners
     ros::Subscriber sub_rtabmap_;

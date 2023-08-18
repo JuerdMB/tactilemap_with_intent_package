@@ -12,9 +12,12 @@ const float PI = 3.1415;
 
 grid_map::GridMapRosConverter converter;
 
-Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map) : nodeHandle_(nodeHandle)
+Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map, mapmode map_mode) : nodeHandle_(nodeHandle)
 {
     sub_rtabmap_ = nodeHandle_.subscribe(TOPIC_INPUT_MAP, 1, &Mapper::incomingMap, this);
+    set_map_mode(map_mode);
+    selfsize_x = .5;
+    selfsize_y = .8;
 
     pub_bytes_dotpad = nodeHandle_.advertise<std_msgs::UInt8MultiArray>(TOPIC_DOTPAD_DATA, 1);
     pub_image_screensized = nodeHandle_.advertise<cv_bridge::CvImage>(TOPIC_IMAGE_SCREENSIZED, 1);
@@ -31,11 +34,25 @@ Mapper::Mapper(ros::NodeHandle nodeHandle, grid_map::GridMap &global_map) : node
     if (!nodeHandle_.getParam(PARAM_ZOOM_LEVEL, zoom_level))
         zoom_level = DEFAULT_ZOOM;
 
-
     ROS_INFO("Set up Mapper");
 }
 
 Mapper::~Mapper() {}
+
+// SETTING MAP MODE
+bool Mapper::set_map_mode(mapmode mode)
+{
+    if (mode >= 0 && mode < 5)
+    { // Currently only 4 modes
+        this->map_mode = mode;
+        ROS_INFO("Mapping in mode %d", mode);
+    }
+    else
+    {
+        ROS_WARN("Invalid Map Mode, running in default mode");
+        map_mode = mapmode(0); // Default mode
+    }
+}
 
 // RECEIVING MAPS FROM MAP SERVER
 
@@ -98,9 +115,23 @@ TRANSFORM_ERROR Mapper::getTransformedZoomedMap(grid_map::GridMap &transformedZo
 
             bool success;
 
+            // Set center position in map
+            grid_map::Position center;
+            switch (map_mode)
+            {
+            case AHEAD:
+                center = grid_map::Position(length_x / 2., 0); // Shift the map half the height up, own position becomes bottom-mid
+                break;
+            case AHEAD_SELFSIZE:
+                center = grid_map::Position(length_x / 2. - selfsize_x * 2., 0); // Shift map (half height - own size *2) up, so own location is in-screen + margin
+                break;
+            default:
+                center = grid_map::Position(length_x / 2., 0); // For now, self in bottom_mid
+                break;
+            }
+
             // Transform map with isometry
-            grid_map::Position self(zoom_level/2., 0); 
-            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(self, length, success);
+            transformedZoomedMap = globalMap_.getTransformedMap(isometryTransform, STATICLAYER, "base_link").getSubmap(center, length, success);
 
             // Return
             if (success)
@@ -218,7 +249,7 @@ cv_bridge::CvImage Mapper::get_painted_image(grid_map::GridMap &input_map, const
     int numChannels = outputImage.image.channels();
     int width = outputImage.image.cols;
     int height = outputImage.image.rows;
-    int centerLoc[2] = {width / 2, height-1};
+    int centerLoc[2] = {width / 2, height - 1};
 
     // Loop through all pixels and change contrast
     // for (int y=0; y<height; y++)
@@ -237,7 +268,7 @@ cv_bridge::CvImage Mapper::get_painted_image(grid_map::GridMap &input_map, const
 
     // Paint selected location red
     std::vector<cv::Point> pointsToPaint = {
-        cv::Point(centerLoc[0], centerLoc[1]),     // center location
+        cv::Point(centerLoc[0], centerLoc[1]), // center location
     };
     for (cv::Point point : pointsToPaint)
     {
@@ -365,7 +396,8 @@ void Mapper::print_output_data(std::vector<uint8_t> &data)
     // }
 }
 
-cv_bridge::CvImage Mapper::get_lowbw_image(grid_map::GridMap &input_map, const std::string &layer){
+cv_bridge::CvImage Mapper::get_lowbw_image(grid_map::GridMap &input_map, const std::string &layer)
+{
     cv_bridge::CvImage outputImage;
     grid_map::GridMapRosConverter::toCvImage(input_map, layer, sensor_msgs::image_encodings::TYPE_8UC1, 0., 1., outputImage);
     return outputImage;

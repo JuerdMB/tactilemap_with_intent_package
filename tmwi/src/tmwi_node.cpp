@@ -2,7 +2,9 @@
 #include "tmwi/Mapper.h"
 
 const std::string PARAM_LOCALIZATION = "rtabmap/localization";
-const std::string PARAM_MAPRATE = "map_freq";
+const std::string PARAM_MAPRATE = "tmwi/map_freq";
+const std::string PARAM_MAP_MODE = "tmwi/map_mode";
+
 
 
 int main(int argc, char **argv) {
@@ -28,9 +30,17 @@ int main(int argc, char **argv) {
         ROS_WARN("Map Rate param not set, running at standard 1 Hz");
     }
 
+    int tempmode=0;
+    if (nodeHandle.getParam(PARAM_MAP_MODE, tempmode)){
+        // do nothing
+    }
+    else{
+        ROS_WARN("Map Mode param not set, running in default mode");
+    }
+
     // Create Mapper that will take care of creating transformed, multi-scale maps of environment
     grid_map::GridMap global_map;
-    Mapper mapper(nodeHandle, global_map);
+    Mapper mapper(nodeHandle, global_map, mapmode(tempmode));
     ros::Timer timer = nodeHandle.createTimer(ros::Duration( 1.0/(double)hz ), std::bind(&Mapper::publishTransformedZoomedMap, &mapper));
 
     if(mode_localization){

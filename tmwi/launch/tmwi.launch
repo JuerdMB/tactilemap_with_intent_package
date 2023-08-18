@@ -1,13 +1,12 @@
 <launch>
     <!-- Args -->
     <!-- Tactile Map With Intent -->
-    <arg name="tmwi_mode" default="1" /> <!-- 1=looking_ahead, 2=self-centered, 3=static_map -->
+    <arg name="namespace_tmwi" default="tmwi" />  
+    <arg name="map_mode" default="0" /> <!-- 0=Ahead, 1=Ahead_selfsize, 2=centered, 4=static_map -->
     <arg name="default_zoom" default="8" />
     <arg name="min_map_size" default="50" />
     <arg name="map_update_rate" default="1" />
-    <arg name="namespace_tmwi" default="tmwi" />    
-    
-
+      
     <!-- Cameras ... ... -->
     <arg name="enable_camera2" default="false" />
 
@@ -16,7 +15,7 @@
     <arg if="$(arg stereo)" name="depth" default="false" />
     <arg unless="$(arg stereo)" name="depth" default="true" />
     <arg name="subscribe_rgb" default="$(arg depth)" />
-
+    wnsize
     <!-- Choose visualization -->
     <arg name="rtabmap_viz" default="false" />
     <arg name="rviz" default="false" />
@@ -52,7 +51,7 @@
     <arg if="$(arg gdb)" name="launch_prefix" default="xterm -e gdb -q -ex run --args" />
     <arg unless="$(arg gdb)" name="launch_prefix" default="" />
     <arg name="clear_params" default="true" />
-    <arg name="output" default="screen" />        <!-- Control node output (screen or log) -->
+    <arg name="output" default="log" />        <!-- Control node output (screen or log) -->
     <arg name="publish_tf_map" default="true" />
 
     <!-- if timestamps of the input topics are synchronized using approximate or exact time policy-->
@@ -380,9 +379,9 @@
     <!-- TACTILE MAP WITH INTENT -->
     <group ns="$(arg namespace_tmwi)">
         <node if="$(arg tmwi_on)" name="tmwi_node" pkg="tmwi" type="tmwi_node" output="log">
-            <param name="zoom_level" value="$(arg default_zoom)" />
-            <param name="map_freq" value="$(arg map_update_rate)" />
-            <param name="mode" value="$(arg tmwi_mode)" />
+            <param name="zoom_level" type="double" value="$(arg default_zoom)" />
+            <param name="map_freq" type="int" value="$(arg map_update_rate)" />
+            <param name="mode" type="int" value="$(arg tmwi_mode)" />
         </node>
     </group>
 
