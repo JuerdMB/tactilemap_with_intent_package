@@ -3,7 +3,10 @@
     <!-- Tactile Map With Intent -->
     <arg name="default_zoom" default="8" />
     <arg name="min_map_size" default="50" />
-    <arg name="map_update_rate" default="1"/>
+    <arg name="map_update_rate" default="1" />
+    <arg name="tmwi_mode" default="1" /> <!-- 1=looking_ahead, 2=self-centered, 3=static_map -->
+    <arg name="namespace_tmwi" default="tmwi" />    
+    
 
     <!-- Cameras ... ... -->
     <arg name="enable_camera2" default="false" />
@@ -21,7 +24,7 @@
     <!-- Localization-only mode -->
     <arg name="localization" default="true" />
     <arg name="initial_pose" default="" />             <!-- Format: "x y z roll pitch yaw" or "x y z qx qy qz qw". Default: see "RGBD/StartAtOrigin" doc -->
-    <arg name="tmwi_on" default="true" /> 
+    <arg name="tmwi_on" default="true" />
 
     <!-- sim time for convenience, if playing a rosbag -->
     <arg name="use_sim_time" default="false" />
@@ -39,7 +42,7 @@
     <arg name="map_frame_id" default="map" />
     <arg name="ground_truth_frame_id" default="" />     <!-- e.g., "world" -->
     <arg name="ground_truth_base_frame_id" default="" />  <!-- e.g., "tracker", a fake frame matching the frame "frame_id" (but on different TF tree) -->
-    <arg name="namespace" default="rtabmap" />
+    <arg name="namespace_RTABMAP" default="rtabmap" />
     <arg name="database_path" default="~/.ros/rtabmap.db" />
     <arg name="queue_size" default="10" />
     <arg name="wait_for_transform" default="0.2" />
@@ -161,11 +164,11 @@
     <!-- Realsenses -->
     <group>
         <!-- Front cam for RTABMAP -->
-    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-        <arg name="align_depth" value="true" />
-        <arg name="camera" value="camera" />
-        <arg name="serial_no" value="030522070002" />
-    </include>
+        <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+            <arg name="align_depth" value="true" />
+            <arg name="camera" value="camera" />
+            <arg name="serial_no" value="030522070002" />
+        </include>
 
         <!-- DotPad camera to monitor hand -->
         <group if="$(arg enable_camera2)">
@@ -188,7 +191,7 @@
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
     <!-- RTABMAP -->
-    <group ns="$(arg namespace)"> 
+    <group ns="$(arg namespace_RTABMAP)">
         <group>
             <!-- Relays -->
             <group unless="$(arg rgbd_sync)">
@@ -212,7 +215,7 @@
                 <remap from="odom" to="$(arg odom_topic)" />
                 <remap from="imu" to="$(arg imu_topic)" />
 
-                <param name="Reg/Force3DoF" value="$(arg 3DOF)"/>
+                <param name="Reg/Force3DoF" value="$(arg 3DOF)" />
 
                 <param name="frame_id" type="string" value="$(arg frame_id)" />
                 <param name="odom_frame_id" type="string" value="$(arg vo_frame_id)" />
@@ -273,8 +276,8 @@
                 <param name="gen_depth_fill_holes_size" type="int" value="$(arg gen_depth_fill_holes_size)" />
                 <param name="gen_depth_fill_iterations" type="int" value="$(arg gen_depth_fill_iterations)" />
                 <param name="gen_depth_fill_holes_error" type="double" value="$(arg gen_depth_fill_holes_error)" />
-                
-                <param name="Reg/Force3DoF" value="$(arg 3DOF)"/>
+
+                <param name="Reg/Force3DoF" value="$(arg 3DOF)" />
 
                 <param name="GridGlobal/MinSize" type="double" value="$(arg min_map_size)" />
                 <param name="Grid/NoiseFilteringRadius" type="double" value="0.2" />
@@ -375,9 +378,12 @@
     </group>
 
     <!-- TACTILE MAP WITH INTENT -->
-    <node if="$(arg tmwi_on)" name="tmwi_node" pkg="tmwi" type="tmwi_node" output="log">
-        <param name="zoom_level" value="$(arg default_zoom)" />
-        <param name="map_freq" value="$(arg map_update_rate)" />
-    </node>
+    <group ns="$(arg namespace_tmwi)">
+        <node if="$(arg tmwi_on)" name="tmwi_node" pkg="tmwi" type="tmwi_node" output="log">
+            <param name="zoom_level" value="$(arg default_zoom)" />
+            <param name="map_freq" value="$(arg map_update_rate)" />
+            <param name="mode" value="$(arg tmwi_mode)" />
+        </node>
+    </group>
 
 </launch>
