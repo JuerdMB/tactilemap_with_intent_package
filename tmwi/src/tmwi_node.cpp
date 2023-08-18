@@ -1,7 +1,8 @@
 #include <ros/ros.h>
 #include "tmwi/Mapper.h"
 
-const std::string PARAM_LOCALIZATION = "localization";
+const std::string PARAM_LOCALIZATION = "rtabmap/localization";
+const std::string PARAM_MAPRATE = "map_freq";
 
 
 int main(int argc, char **argv) {
@@ -11,17 +12,26 @@ int main(int argc, char **argv) {
 
     bool mode_localization;
     if (nodeHandle.getParam(PARAM_LOCALIZATION, mode_localization)){
-        ROS_INFO("TMWI_Node running in localization_only mode: %b", mode_localization);
+        ROS_INFO("TMWI_Node running in localization_only mode: %d", mode_localization);
     }
     else{
         mode_localization = false;
         ROS_WARN("Localization param not set, running in standard mapping mode");
     }
 
+    int hz;
+    if (nodeHandle.getParam(PARAM_MAPRATE, hz)){
+        ROS_INFO("Mapping with rate %d", hz);
+    }
+    else{
+        hz = 1; // Default rate = 1
+        ROS_WARN("Map Rate param not set, running at standard 1 Hz");
+    }
+
     // Create Mapper that will take care of creating transformed, multi-scale maps of environment
     grid_map::GridMap global_map;
     Mapper mapper(nodeHandle, global_map);
-    ros::Timer timer = nodeHandle.createTimer(ros::Duration(.5), std::bind(&Mapper::publishTransformedZoomedMap, &mapper));
+    ros::Timer timer = nodeHandle.createTimer(ros::Duration( 1.0/(double)hz ), std::bind(&Mapper::publishTransformedZoomedMap, &mapper));
 
     if(mode_localization){
         // Check if there is already a database file present
@@ -31,8 +41,8 @@ int main(int argc, char **argv) {
         while(!mapper.receivedMap){
             // Try to get map from database
             // global_map = ...
+            // ros::service::waitForService("/rtabmap/")
         }
-        
     }
     
 

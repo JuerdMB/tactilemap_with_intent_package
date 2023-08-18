@@ -58,9 +58,6 @@ include_directories(
 add_executable(${PROJECT_NAME}_node src/tmwi_node.cpp src/Mapper.cpp)
 target_link_libraries(tmwi_node ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_test_node src/test_node.cpp src/Mapper.cpp)
-target_link_libraries(${PROJECT_NAME}_test_node ${catkin_LIBRARIES})
-
 #############
 ## Testing ##
 #############

@@ -1,9 +1,9 @@
 <launch>
-
     <!-- Args -->
     <!-- Tactile Map With Intent -->
     <arg name="default_zoom" default="8" />
     <arg name="min_map_size" default="50" />
+    <arg name="map_update_rate" default="1"/>
 
     <!-- Cameras ... ... -->
     <arg name="enable_camera2" default="false" />
@@ -15,12 +15,13 @@
     <arg name="subscribe_rgb" default="$(arg depth)" />
 
     <!-- Choose visualization -->
-    <arg name="rtabmap_viz" default="true" />
+    <arg name="rtabmap_viz" default="false" />
     <arg name="rviz" default="false" />
 
     <!-- Localization-only mode -->
-    <arg name="localization" default="false" />
+    <arg name="localization" default="true" />
     <arg name="initial_pose" default="" />             <!-- Format: "x y z roll pitch yaw" or "x y z qx qy qz qw". Default: see "RGBD/StartAtOrigin" doc -->
+    <arg name="tmwi_on" default="true" /> 
 
     <!-- sim time for convenience, if playing a rosbag -->
     <arg name="use_sim_time" default="false" />
@@ -31,6 +32,7 @@
     <arg name="gui_cfg" default="~/.ros/rtabmap_gui.ini" />
     <arg name="rviz_cfg" default="$(find tmwi)/launch/config/rgbd.rviz" />
 
+    <arg name="3DOF" default="true" />
     <arg name="frame_id" default="base_link" />     <!-- Fixed frame id, you may set "base_link" or "base_footprint" if they are published -->
     <arg name="odom_frame_id" default="" />                <!-- If set, TF is used to get odometry instead of the topic -->
     <arg name="odom_frame_id_init" default="" />                <!-- If set, TF map->odom is published even if no odometry topic has been received yet. The frame id should match the one in the topic. -->
@@ -51,14 +53,13 @@
     <arg name="publish_tf_map" default="true" />
 
     <!-- if timestamps of the input topics are synchronized using approximate or exact time policy-->
-    <arg if="$(arg stereo)" name="approx_sync" default="false" />
-    <arg unless="$(arg stereo)" name="approx_sync" default="$(arg depth)" />
-    <arg name="approx_sync_max_interval" default="0" /> <!-- (sec) 0 means infinite interval duration (used with approx_sync=true) -->
+    <arg name="approx_sync" value="false" />
+    <arg name="approx_sync_max_interval" default="0.2" /> <!-- (sec) 0 means infinite interval duration (used with approx_sync=true) -->
 
     <!-- RGB-D related topics -->
-    <arg name="rgb_topic" default="/camera/rgb/image_rect_color" />
-    <arg name="depth_topic" default="/camera/depth_registered/image_raw" />
-    <arg name="camera_info_topic" default="/camera/rgb/camera_info" />
+    <arg name="rgb_topic" default="/camera/color/image_raw" />
+    <arg name="depth_topic" default="/camera/aligned_depth_to_color/image_raw" />
+    <arg name="camera_info_topic" default="/camera/color/camera_info" />
     <arg name="depth_camera_info_topic" default="$(arg camera_info_topic)" />
 
     <!-- stereo related topics -->
@@ -128,8 +129,8 @@
     <arg name="scan_cloud_assembling_voxel_size" default="0.05" />
     <arg name="scan_cloud_assembling_range_min" default="0.0" />    <!-- 0=disabled -->
     <arg name="scan_cloud_assembling_range_max" default="0.0" />    <!-- 0=disabled -->
-    <arg name="scan_cloud_assembling_noise_radius" default="0.0" />    <!-- 0=disabled -->
-    <arg name="scan_cloud_assembling_noise_min_neighbors" default="5" />
+    <arg name="scan_cloud_assembling_noise_radius" default="0.03" />    <!-- 0=disabled -->
+    <arg name="scan_cloud_assembling_noise_min_neighbors" default="50" />
 
     <arg name="subscribe_user_data" default="false" />             <!-- user data synchronized subscription -->
     <arg name="user_data_topic" default="/user_data" />
@@ -156,41 +157,38 @@
 
 
     <!-- Nodes -->
-    <group ns="$(arg namespace)">
 
-        <!-- Realsenses -->
-        <group>
-            <!-- Front cam for RTABMAP -->
+    <!-- Realsenses -->
+    <group>
+        <!-- Front cam for RTABMAP -->
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="align_depth" value="true" />
+        <arg name="camera" value="camera" />
+        <arg name="serial_no" value="030522070002" />
+    </include>
+
+        <!-- DotPad camera to monitor hand -->
+        <group if="$(arg enable_camera2)">
             <include file="$(find realsense2_camera)/launch/rs_camera.launch">
                 <arg name="initial_reset" value="false" />
-                <arg name="align_depth" value="true" />
-                <arg name="camera" value="camera" />
-                <arg name="serial_no" value="030522070002" />
-                <arg name="filters" value="pointcloud" />
-                <arg name="enable_sync" value="true" />
+                <arg name="camera" value="camera2" />
+                <arg name="serial_no" value="034522061023" />
+                <arg name="filters" value="spatial,temporal" />
+                <arg name="enable_depth" value="false" />
+                <arg name="enable_fisheye" value="true" />
+                <arg name="enable_confidence" value="false" />
+                <arg name="publish_tf" value="false" />
+                <arg name="publish_odom_tf" value="false" />
             </include>
-
-            <!-- DotPad camera to monitor hand -->
-            <group if="$(arg enable_camera2)">
-                <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-                    <arg name="initial_reset" value="false" />
-                    <arg name="camera" value="camera2" />
-                    <arg name="serial_no" value="034522061023" />
-                    <arg name="filters" value="spatial,temporal" />
-                    <arg name="enable_depth" value="false" />
-                    <arg name="enable_fisheye" value="true" />
-                    <arg name="enable_confidence" value="false" />
-                    <arg name="publish_tf" value="false" />
-                    <arg name="publish_odom_tf" value="false" />
-                </include>
-            </group>
         </group>
+    </group>
 
-        <!-- ROBOT STATE PUBLISHER -->
-        <param name="robot_description" command="xacro $(find tmwi_description)/urdf/testsetup_stroller.urdf.xacro" />
-        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <!-- ROBOT STATE PUBLISHER -->
+    <param name="robot_description" command="xacro $(find tmwi_description)/urdf/testsetup_stroller.urdf.xacro" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
-        <!-- RTABMAP -->
+    <!-- RTABMAP -->
+    <group ns="$(arg namespace)"> 
         <group>
             <!-- Relays -->
             <group unless="$(arg rgbd_sync)">
@@ -213,6 +211,8 @@
                 <remap from="rgbd_image" to="$(arg rgbd_topic_relay)" />
                 <remap from="odom" to="$(arg odom_topic)" />
                 <remap from="imu" to="$(arg imu_topic)" />
+
+                <param name="Reg/Force3DoF" value="$(arg 3DOF)"/>
 
                 <param name="frame_id" type="string" value="$(arg frame_id)" />
                 <param name="odom_frame_id" type="string" value="$(arg vo_frame_id)" />
@@ -273,6 +273,15 @@
                 <param name="gen_depth_fill_holes_size" type="int" value="$(arg gen_depth_fill_holes_size)" />
                 <param name="gen_depth_fill_iterations" type="int" value="$(arg gen_depth_fill_iterations)" />
                 <param name="gen_depth_fill_holes_error" type="double" value="$(arg gen_depth_fill_holes_error)" />
+                
+                <param name="Reg/Force3DoF" value="$(arg 3DOF)"/>
+
+                <param name="GridGlobal/MinSize" type="double" value="$(arg min_map_size)" />
+                <param name="Grid/NoiseFilteringRadius" type="double" value="0.2" />
+                <param name="Grid/NoiseFilteringMinNeighbors" type="double" value="12" />
+                <param name="Grid/RangeMax" type="double" value="3" />
+                <param name="Grid/MinGroundHeight" type="double" value="0" />
+                <param name="Grid/MaxGroundHeight" type="double" value="0.15" />
 
                 <remap from="rgb/image" to="$(arg rgb_topic_relay)" />
                 <remap from="depth/image" to="$(arg depth_topic_relay)" />
@@ -363,11 +372,12 @@
                 <param name="approx_sync_max_interval" type="double" value="$(arg approx_sync_max_interval)" />
             </node>
         </group>
-
-        <!-- TACTILE MAP WITH INTENT -->
-        <node name="tmwi_node" pkg="tmwi" type="tmwi_node" output="screen">
-            <param name="zoom_level" value="$(arg default_zoom)" />
-        </node>
     </group>
+
+    <!-- TACTILE MAP WITH INTENT -->
+    <node if="$(arg tmwi_on)" name="tmwi_node" pkg="tmwi" type="tmwi_node" output="log">
+        <param name="zoom_level" value="$(arg default_zoom)" />
+        <param name="map_freq" value="$(arg map_update_rate)" />
+    </node>
 
 </launch>

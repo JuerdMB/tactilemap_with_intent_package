@@ -23,8 +23,9 @@ const double DEFAULT_ZOOM = 3.;
 // Subscribed topics
 const std::string PARAM_ZOOM_LEVEL = "/tmwi_node/zoom_level";
 
+
 // Publish topics
-const std::string TOPIC_INPUT_MAP = "/rtabmap/proj_map";
+const std::string TOPIC_INPUT_MAP = "/rtabmap/grid_map";
 const std::string TOPIC_DOTPAD_DATA = "/mapper/output_data";
 const std::string TOPIC_SCREEN_FINISHED = "/dotpad/screen_finished";
 
