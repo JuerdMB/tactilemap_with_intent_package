@@ -1,10 +1,10 @@
 <launch>
     <!-- Args -->
     <!-- Tactile Map With Intent -->
+    <arg name="tmwi_mode" default="1" /> <!-- 1=looking_ahead, 2=self-centered, 3=static_map -->
     <arg name="default_zoom" default="8" />
     <arg name="min_map_size" default="50" />
     <arg name="map_update_rate" default="1" />
-    <arg name="tmwi_mode" default="1" /> <!-- 1=looking_ahead, 2=self-centered, 3=static_map -->
     <arg name="namespace_tmwi" default="tmwi" />    
     
 
